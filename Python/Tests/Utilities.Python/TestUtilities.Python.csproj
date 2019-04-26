@@ -110,9 +110,9 @@
     <Compile Include="DebuggingGeneralOptionsSetter.cs" />
     <Compile Include="DefaultInterpreterSetter.cs" />
     <Compile Include="Django\NewAppDialog.cs" />
-    <Compile Include="EditorTestToolset.cs" />
+    <None Include="EditorTestToolset.cs" />
     <Compile Include="EnvironmentVariableSetter.cs" />
-    <Compile Include="EventTaskSources.cs" />
+    <None Include="EventTaskSources.cs" />
     <Compile Include="InterpreterWithPackageSetter.cs" />
     <Compile Include="MefExportProviders.cs" />
     <Compile Include="MockInteractiveWindowCommandsFactory.cs" />
@@ -124,7 +124,7 @@
     <Compile Include="PythonInstallPackagesInfoBar.cs" />
     <Compile Include="PythonCreateCondaEnvInfoBar.cs" />
     <Compile Include="PythonCreateVirtualEnvInfoBar.cs" />
-    <Compile Include="PythonProjectExtensions.cs" />
+    <None Include="PythonProjectExtensions.cs" />
     <Compile Include="PythonServiceGeneralOptionsSetter.cs" />
     <Compile Include="PythonOptionsSetter.cs" />
     <Compile Include="PythonProjectDebugProperties.cs" />
@@ -139,7 +139,7 @@
     <Compile Include="PythonTestDefinitions.cs" />
     <Compile Include="PythonToolsOptionsImporter.cs" />
     <Compile Include="PythonToolsTestUtilities.cs" />
-    <Compile Include="EditorWindowExtensions.cs" />
+    <None Include="EditorWindowExtensions.cs" />
     <Compile Include="PythonVisualStudioApp.cs" />
     <Compile Include="ReplWindowProxy.cs" />
     <Compile Include="ReplWindowProxySettings.cs" />

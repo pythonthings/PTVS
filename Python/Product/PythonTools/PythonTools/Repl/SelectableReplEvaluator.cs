@@ -19,8 +19,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Editor.Core;
+// LSC
+//using Microsoft.PythonTools.Editor;
+//using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -145,13 +146,14 @@ namespace Microsoft.PythonTools.Repl {
 
         public bool LiveCompletionsOnly => (_evaluator as IPythonInteractiveIntellisense)?.LiveCompletionsOnly ?? false;
 
-        public VsProjectAnalyzer Analyzer => (_evaluator as IPythonInteractiveIntellisense)?.Analyzer;
-        public Task<VsProjectAnalyzer> GetAnalyzerAsync() {
-            if (_evaluator is IPythonInteractiveIntellisense eval) {
-                return eval.GetAnalyzerAsync();
-            }
-            return Task.FromResult<VsProjectAnalyzer>(null);
-        }
+        // LSC
+        //public VsProjectAnalyzer Analyzer => (_evaluator as IPythonInteractiveIntellisense)?.Analyzer;
+        //public Task<VsProjectAnalyzer> GetAnalyzerAsync() {
+        //    if (_evaluator is IPythonInteractiveIntellisense eval) {
+        //        return eval.GetAnalyzerAsync();
+        //    }
+        //    return Task.FromResult<VsProjectAnalyzer>(null);
+        //}
 
         public Uri DocumentUri => (_evaluator as IPythonInteractiveIntellisense)?.DocumentUri;
         public Uri NextDocumentUri() => (_evaluator as IPythonInteractiveIntellisense)?.NextDocumentUri();
@@ -210,19 +212,20 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void DetachWindow(IInteractiveEvaluator oldEval) {
-            var oldView = oldEval?.CurrentWindow?.TextView;
-            if (oldView != null) {
-                foreach (var buffer in oldView.BufferGraph.GetTextBuffers(EditorExtensions.IsPythonContent)) {
-                    if (oldEval.CurrentWindow.CurrentLanguageBuffer == buffer) {
-                        continue;
-                    }
+            // LSC
+            //var oldView = oldEval?.CurrentWindow?.TextView;
+            //if (oldView != null) {
+            //    foreach (var buffer in oldView.BufferGraph.GetTextBuffers(EditorExtensions.IsPythonContent)) {
+            //        if (oldEval.CurrentWindow.CurrentLanguageBuffer == buffer) {
+            //            continue;
+            //        }
 
-                    var tb = PythonTextBufferInfo.TryGetForBuffer(buffer);
-                    if (tb != null) {
-                        tb.DoNotParse = true;
-                    }
-                }
-            }
+            //        var tb = PythonTextBufferInfo.TryGetForBuffer(buffer);
+            //        if (tb != null) {
+            //            tb.DoNotParse = true;
+            //        }
+            //    }
+            //}
         }
 
         private void UpdateCaption() {

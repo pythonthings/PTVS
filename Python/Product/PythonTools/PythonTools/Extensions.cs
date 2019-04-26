@@ -28,7 +28,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Editor.Core;
+// LSC
+//using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -111,85 +112,85 @@ namespace Microsoft.PythonTools {
         /// </summary>
         /// <returns>A tracking span. The span may be of length zero if there
         /// is no suitable token at the trigger point.</returns>
-        internal static ITrackingSpan GetApplicableSpan(this IIntellisenseSession session, ITextBuffer buffer) {
-            var snapshot = buffer.CurrentSnapshot;
-            var triggerPoint = session.GetTriggerPoint(buffer);
+        //internal static ITrackingSpan GetApplicableSpan(this IIntellisenseSession session, ITextBuffer buffer) {
+        //    var snapshot = buffer.CurrentSnapshot;
+        //    var triggerPoint = session.GetTriggerPoint(buffer);
 
-            var span = snapshot.GetApplicableSpan(triggerPoint.GetPosition(snapshot), session.IsCompleteWordMode());
-            if (span != null) {
-                return span;
-            }
-            return snapshot.CreateTrackingSpan(triggerPoint.GetPosition(snapshot), 0, SpanTrackingMode.EdgeInclusive);
-        }
+        //    var span = snapshot.GetApplicableSpan(triggerPoint.GetPosition(snapshot), session.IsCompleteWordMode());
+        //    if (span != null) {
+        //        return span;
+        //    }
+        //    return snapshot.CreateTrackingSpan(triggerPoint.GetPosition(snapshot), 0, SpanTrackingMode.EdgeInclusive);
+        //}
 
         /// <summary>
         /// Returns the applicable span at the provided position.
         /// </summary>
         /// <returns>A tracking span, or null if there is no token at the
         /// provided position.</returns>
-        internal static ITrackingSpan GetApplicableSpan(this ITextSnapshot snapshot, int position, bool completeWord) {
-            var classifier = snapshot.TextBuffer.GetPythonClassifier();
-            var line = snapshot.GetLineFromPosition(position);
-            if (classifier == null || line == null) {
-                return null;
-            }
+        //internal static ITrackingSpan GetApplicableSpan(this ITextSnapshot snapshot, int position, bool completeWord) {
+        //    var classifier = snapshot.TextBuffer.GetPythonClassifier();
+        //    var line = snapshot.GetLineFromPosition(position);
+        //    if (classifier == null || line == null) {
+        //        return null;
+        //    }
 
-            var spanLength = position - line.Start.Position;
-            if (completeWord) {
-                // Increase position by one to include 'fob' in: "abc.|fob"
-                if (spanLength < line.Length) {
-                    spanLength += 1;
-                }
-            }
+        //    var spanLength = position - line.Start.Position;
+        //    if (completeWord) {
+        //        // Increase position by one to include 'fob' in: "abc.|fob"
+        //        if (spanLength < line.Length) {
+        //            spanLength += 1;
+        //        }
+        //    }
 
-            var classifications = classifier.GetClassificationSpans(new SnapshotSpan(line.Start, spanLength));
-            // Handle "|"
-            if (classifications == null || classifications.Count == 0) {
-                return null;
-            }
+        //    var classifications = classifier.GetClassificationSpans(new SnapshotSpan(line.Start, spanLength));
+        //    // Handle "|"
+        //    if (classifications == null || classifications.Count == 0) {
+        //        return null;
+        //    }
 
-            var lastToken = classifications[classifications.Count - 1];
-            // Handle "fob |"
-            if (lastToken == null || position > lastToken.Span.End) {
-                return null;
-            }
+        //    var lastToken = classifications[classifications.Count - 1];
+        //    // Handle "fob |"
+        //    if (lastToken == null || position > lastToken.Span.End) {
+        //        return null;
+        //    }
 
-            if (position > lastToken.Span.Start) {
-                if (lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
-                    // Handle "'contents of strin|g"
-                    var text = lastToken.Span.GetText();
-                    var span = GetStringContentSpan(text, lastToken.Span.Start) ?? lastToken.Span;
+        //    if (position > lastToken.Span.Start) {
+        //        if (lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
+        //            // Handle "'contents of strin|g"
+        //            var text = lastToken.Span.GetText();
+        //            var span = GetStringContentSpan(text, lastToken.Span.Start) ?? lastToken.Span;
 
-                    return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
-                }
+        //            return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
+        //        }
 
-                if (lastToken.CanComplete()) {
-                    // Handle "fo|o" : when it is 'show member' or 'complete word' use complete token.
-                    // When it is autocompletion (as when typing in front of the existing contruct), take left part only.
-                    var span = completeWord ? lastToken.Span : Span.FromBounds(lastToken.Span.Start, position);
-                    return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
-                } 
+        //        if (lastToken.CanComplete()) {
+        //            // Handle "fo|o" : when it is 'show member' or 'complete word' use complete token.
+        //            // When it is autocompletion (as when typing in front of the existing contruct), take left part only.
+        //            var span = completeWord ? lastToken.Span : Span.FromBounds(lastToken.Span.Start, position);
+        //            return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
+        //        } 
 
-                // Handle "<|="
-                return null;
-            }
+        //        // Handle "<|="
+        //        return null;
+        //    }
 
-            var secondLastToken = classifications.Count >= 2 ? classifications[classifications.Count - 2] : null;
-            if (lastToken.Span.Start == position && lastToken.CanComplete() &&
-                (secondLastToken == null ||             // Handle "|fob"
-                 position > secondLastToken.Span.End || // Handle "if |fob"
-                 !secondLastToken.CanComplete())) {     // Handle "abc.|fob"
-                return snapshot.CreateTrackingSpan(lastToken.Span, SpanTrackingMode.EdgeInclusive);
-            }
+        //    var secondLastToken = classifications.Count >= 2 ? classifications[classifications.Count - 2] : null;
+        //    if (lastToken.Span.Start == position && lastToken.CanComplete() &&
+        //        (secondLastToken == null ||             // Handle "|fob"
+        //         position > secondLastToken.Span.End || // Handle "if |fob"
+        //         !secondLastToken.CanComplete())) {     // Handle "abc.|fob"
+        //        return snapshot.CreateTrackingSpan(lastToken.Span, SpanTrackingMode.EdgeInclusive);
+        //    }
 
-            // Handle "abc|."
-            // ("ab|c." would have been treated as "ab|c")
-            if (secondLastToken != null && secondLastToken.Span.End == position && secondLastToken.CanComplete()) {
-                return snapshot.CreateTrackingSpan(secondLastToken.Span, SpanTrackingMode.EdgeInclusive);
-            }
+        //    // Handle "abc|."
+        //    // ("ab|c." would have been treated as "ab|c")
+        //    if (secondLastToken != null && secondLastToken.Span.End == position && secondLastToken.CanComplete()) {
+        //        return snapshot.CreateTrackingSpan(secondLastToken.Span, SpanTrackingMode.EdgeInclusive);
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
         internal static Span? GetStringContentSpan(string text, int globalStart = 0) {
             var firstQuote = text.IndexOfAny(QuoteChars);
@@ -279,90 +280,90 @@ namespace Microsoft.PythonTools {
             return guid;
         }
 
+        // LSC
+        //internal static PythonEditorServices GetEditorServices(this IServiceProvider serviceProvider) {
+        //    return serviceProvider.GetComponentModel()?.GetService<PythonEditorServices>();
+        //}
 
-        internal static PythonEditorServices GetEditorServices(this IServiceProvider serviceProvider) {
-            return serviceProvider.GetComponentModel()?.GetService<PythonEditorServices>();
-        }
+        //internal static async Task<PythonLanguageVersion> GetLanguageVersionAsync(this ITextView textView, IServiceProvider serviceProvider) {
+        //    var evaluator = textView.TextBuffer.GetInteractiveWindow().GetPythonEvaluator();
+        //    if (evaluator != null) {
+        //        return evaluator.LanguageVersion;
+        //    }
 
-        internal static async Task<PythonLanguageVersion> GetLanguageVersionAsync(this ITextView textView, IServiceProvider serviceProvider) {
-            var evaluator = textView.TextBuffer.GetInteractiveWindow().GetPythonEvaluator();
-            if (evaluator != null) {
-                return evaluator.LanguageVersion;
-            }
+        //    var entry = textView.TextBuffer.TryGetAnalysisEntry();
+        //    if (entry?.Analyzer != null) {
+        //        return entry.Analyzer.LanguageVersion;
+        //    }
 
-            var entry = textView.TextBuffer.TryGetAnalysisEntry();
-            if (entry?.Analyzer != null) {
-                return entry.Analyzer.LanguageVersion;
-            }
+        //    var analyzer = await serviceProvider.FindAnalyzerAsync(textView);
+        //    if (analyzer is VsProjectAnalyzer pyAnalyzer) {
+        //        return pyAnalyzer.LanguageVersion;
+        //    }
 
-            var analyzer = await serviceProvider.FindAnalyzerAsync(textView);
-            if (analyzer is VsProjectAnalyzer pyAnalyzer) {
-                return pyAnalyzer.LanguageVersion;
-            }
+        //    var defaultInterp = serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
+        //    if (defaultInterp?.Configuration != null) {
+        //        try {
+        //            return defaultInterp.Configuration.Version.ToLanguageVersion();
+        //        } catch (InvalidOperationException) {
+        //        }
+        //    }
 
-            var defaultInterp = serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
-            if (defaultInterp?.Configuration != null) {
-                try {
-                    return defaultInterp.Configuration.Version.ToLanguageVersion();
-                } catch (InvalidOperationException) {
-                }
-            }
-
-            return PythonLanguageVersion.None;
-        }
+        //    return PythonLanguageVersion.None;
+        //}
 
         /// <summary>
         /// Returns the active VsProjectAnalyzer being used for where the caret is currently located in this view.
         /// </summary>
-        internal static VsProjectAnalyzer GetAnalyzerAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-            return GetAnalysisAtCaret(textView, serviceProvider)?.Analyzer;
-        }
+        //internal static VsProjectAnalyzer GetAnalyzerAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
+        //    return GetAnalysisAtCaret(textView, serviceProvider)?.Analyzer;
+        //}
 
         /// <summary>
         /// Returns the AnalysisEntry being used for where the caret is currently located in this view.
         /// 
         /// Returns null if the caret isn't in Python code or an analysis doesn't exist for some reason.
         /// </summary>
-        internal static AnalysisEntry GetAnalysisAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-            var buffer = textView.GetPythonBufferAtCaret();
-            if (buffer != null) {
-                return buffer.TryGetAnalysisEntry();
-            }
-            return textView.TryGetAnalysisEntry(serviceProvider);
-        }
+        //internal static AnalysisEntry GetAnalysisAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
+        //    var buffer = textView.GetPythonBufferAtCaret();
+        //    if (buffer != null) {
+        //        return buffer.TryGetAnalysisEntry();
+        //    }
+        //    return textView.TryGetAnalysisEntry(serviceProvider);
+        //}
 
         /// <summary>
         /// Returns the ITextBuffer whose content type is Python for the current caret position in the text view.
         /// 
         /// Returns null if the caret isn't in a Python buffer.
         /// </summary>
-        internal static ITextBuffer GetPythonBufferAtCaret(this ITextView textView) {
-            return GetPythonCaret(textView)?.Snapshot.TextBuffer;
-        }
+        //internal static ITextBuffer GetPythonBufferAtCaret(this ITextView textView) {
+        //    return GetPythonCaret(textView)?.Snapshot.TextBuffer;
+        //}
 
         /// <summary>
         /// Gets the point where the caret is currently located in a Python buffer, or null if the caret
         /// isn't currently positioned in a Python buffer.
         /// </summary>
-        internal static SnapshotPoint? GetPythonCaret(this ITextView textView) {
-            return textView.BufferGraph.MapDownToFirstMatch(
-                textView.Caret.Position.BufferPosition,
-                PointTrackingMode.Positive,
-                EditorExtensions.IsPythonContent,
-                PositionAffinity.Successor
-            );
-        }
+        //internal static SnapshotPoint? GetPythonCaret(this ITextView textView) {
+        //    return textView.BufferGraph.MapDownToFirstMatch(
+        //        textView.Caret.Position.BufferPosition,
+        //        PointTrackingMode.Positive,
+        //        EditorExtensions.IsPythonContent,
+        //        PositionAffinity.Successor
+        //    );
+        //}
 
         /// <summary>
         /// Gets the current selection in a text view mapped down to the Python buffer(s).
         /// </summary>
-        internal static NormalizedSnapshotSpanCollection GetPythonSelection(this ITextView textView) {
-            return textView.BufferGraph.MapDownToFirstMatch(
-                textView.Selection.StreamSelectionSpan.SnapshotSpan,
-                SpanTrackingMode.EdgeInclusive,
-                EditorExtensions.IsPythonContent
-            );
-        }
+        //internal static NormalizedSnapshotSpanCollection GetPythonSelection(this ITextView textView) {
+        //    return textView.BufferGraph.MapDownToFirstMatch(
+        //        textView.Selection.StreamSelectionSpan.SnapshotSpan,
+        //        SpanTrackingMode.EdgeInclusive,
+        //        EditorExtensions.IsPythonContent
+        //    );
+        //}
 
         /// <summary>
         /// Gets the Python project node associatd with the buffer where the caret is located.
@@ -370,21 +371,21 @@ namespace Microsoft.PythonTools {
         /// This maps down to the current Python buffer, determines its filename, and then resolves
         /// that filename back to the project.
         /// </summary>
-        internal static PythonProjectNode GetProjectAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-            var point = textView.BufferGraph.MapDownToFirstMatch(
-                textView.Caret.Position.BufferPosition,
-                PointTrackingMode.Positive,
-                EditorExtensions.IsPythonContent,
-                PositionAffinity.Successor
-            );
+        //internal static PythonProjectNode GetProjectAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
+        //    var point = textView.BufferGraph.MapDownToFirstMatch(
+        //        textView.Caret.Position.BufferPosition,
+        //        PointTrackingMode.Positive,
+        //        EditorExtensions.IsPythonContent,
+        //        PositionAffinity.Successor
+        //    );
 
-            if (point != null) {
-                var filename = point.Value.Snapshot.TextBuffer.GetFilePath();
-                return GetProjectFromFile(serviceProvider, filename);
-            }
+        //    if (point != null) {
+        //        var filename = point.Value.Snapshot.TextBuffer.GetFilePath();
+        //        return GetProjectFromFile(serviceProvider, filename);
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
         internal static ITextBuffer GetTextBufferFromOpenFile(this IServiceProvider serviceProvider, string filename) {
             var docTable = serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
@@ -459,42 +460,42 @@ namespace Microsoft.PythonTools {
             return workspaceContextProvider.Workspace;
         }
 
-        internal static ITrackingSpan GetCaretSpan(this ITextView view) {
-            var caretPoint = view.GetPythonCaret();
-            Debug.Assert(caretPoint != null);
-            var snapshot = caretPoint.Value.Snapshot;
-            var caretPos = caretPoint.Value.Position;
+        //internal static ITrackingSpan GetCaretSpan(this ITextView view) {
+        //    var caretPoint = view.GetPythonCaret();
+        //    Debug.Assert(caretPoint != null);
+        //    var snapshot = caretPoint.Value.Snapshot;
+        //    var caretPos = caretPoint.Value.Position;
 
-            // fob(
-            //    ^
-            //    +---  Caret here
-            //
-            // We want to lookup fob, not fob(
-            //
-            ITrackingSpan span;
-            if (caretPos != snapshot.Length) {
-                string curChar = snapshot.GetText(caretPos, 1);
-                if (!IsIdentifierChar(curChar[0]) && caretPos > 0) {
-                    string prevChar = snapshot.GetText(caretPos - 1, 1);
-                    if (IsIdentifierChar(prevChar[0])) {
-                        caretPos--;
-                    }
-                }
-                span = snapshot.CreateTrackingSpan(
-                    caretPos,
-                    1,
-                    SpanTrackingMode.EdgeInclusive
-                );
-            } else {
-                span = snapshot.CreateTrackingSpan(
-                    caretPos,
-                    0,
-                    SpanTrackingMode.EdgeInclusive
-                );
-            }
+        //    // fob(
+        //    //    ^
+        //    //    +---  Caret here
+        //    //
+        //    // We want to lookup fob, not fob(
+        //    //
+        //    ITrackingSpan span;
+        //    if (caretPos != snapshot.Length) {
+        //        string curChar = snapshot.GetText(caretPos, 1);
+        //        if (!IsIdentifierChar(curChar[0]) && caretPos > 0) {
+        //            string prevChar = snapshot.GetText(caretPos - 1, 1);
+        //            if (IsIdentifierChar(prevChar[0])) {
+        //                caretPos--;
+        //            }
+        //        }
+        //        span = snapshot.CreateTrackingSpan(
+        //            caretPos,
+        //            1,
+        //            SpanTrackingMode.EdgeInclusive
+        //        );
+        //    } else {
+        //        span = snapshot.CreateTrackingSpan(
+        //            caretPos,
+        //            0,
+        //            SpanTrackingMode.EdgeInclusive
+        //        );
+        //    }
 
-            return span;
-        }
+        //    return span;
+        //}
 
         private static bool IsIdentifierChar(char curChar) {
             return Char.IsLetterOrDigit(curChar) || curChar == '_';

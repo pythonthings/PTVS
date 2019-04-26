@@ -1216,9 +1216,13 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public override void Load(string filename, string location, string name, uint flags, ref Guid iidProject, out int canceled) {
             base.Load(filename, location, name, flags, ref iidProject, out canceled);
-            LibraryManager libraryManager = Site.GetService(GetLibraryManagerType()) as LibraryManager;
-            if (null != libraryManager) {
-                libraryManager.RegisterHierarchy(InteropSafeHierarchy);
+            // LSC
+            var libraryManagerType = GetLibraryManagerType();
+            if (libraryManagerType != null) {
+                var libraryManager = Site.GetService(libraryManagerType) as LibraryManager;
+                if (libraryManager != null) {
+                    libraryManager.RegisterHierarchy(InteropSafeHierarchy);
+                }
             }
         }
 

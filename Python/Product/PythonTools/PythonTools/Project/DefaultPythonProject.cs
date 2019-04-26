@@ -27,7 +27,8 @@ namespace Microsoft.PythonTools.Project {
         private readonly IServiceProvider _serviceProvider;
         private readonly string _filePath;
 
-        public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging { add { } remove { } }
+        // LSC
+        //public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging { add { } remove { } }
 
         public DefaultPythonProject(IServiceProvider serviceProvider, string filePath) {
             Utilities.ArgumentNotNullOrEmpty("filePath", filePath);
@@ -39,9 +40,10 @@ namespace Microsoft.PythonTools.Project {
             Debug.Fail("Unexpected DefaultPythonProject.SetProperty() call");
         }
 
-        public Projects.ProjectAnalyzer GetProjectAnalyzer() {
-            return _serviceProvider.GetPythonToolsService().TryGetSharedAnalyzer(null, out _, addUser: false);
-        }
+        // LSC
+        //public Projects.ProjectAnalyzer GetProjectAnalyzer() {
+        //    return _serviceProvider.GetPythonToolsService().TryGetSharedAnalyzer(null, out _, addUser: false);
+        //}
 
         public IPythonInterpreterFactory GetInterpreterFactory() {
             return _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>().DefaultInterpreter;

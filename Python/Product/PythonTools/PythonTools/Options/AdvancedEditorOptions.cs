@@ -131,29 +131,35 @@ namespace Microsoft.PythonTools.Options {
 
         public bool AutoListMembers {
             get {
-                return _service.LangPrefs.AutoListMembers;
+                return true;
+                // LSC
+                //return _service.LangPrefs.AutoListMembers;
             }
             set {
-                var prefs = _service.GetLanguagePreferences();
-                var val = value ? 1u : 0u;
-                if (prefs.fAutoListMembers != val) {
-                    prefs.fAutoListMembers = val;
-                    _service.SetLanguagePreferences(prefs);
-                }
+                // LSC
+                //var prefs = _service.GetLanguagePreferences();
+                //var val = value ? 1u : 0u;
+                //if (prefs.fAutoListMembers != val) {
+                //    prefs.fAutoListMembers = val;
+                //    _service.SetLanguagePreferences(prefs);
+                //}
             }
         }
 
         public bool HideAdvancedMembers {
             get {
-                return _service.LangPrefs.HideAdvancedMembers;
+                // LSC
+                return true;
+                //return _service.LangPrefs.HideAdvancedMembers;
             }
             set {
-                var prefs = _service.GetLanguagePreferences();
-                var val = value ? 1u : 0u;
-                if (prefs.fHideAdvancedAutoListMembers != val) {
-                    prefs.fHideAdvancedAutoListMembers = val;
-                    _service.SetLanguagePreferences(prefs);
-                }
+                // LSC
+                //var prefs = _service.GetLanguagePreferences();
+                //var val = value ? 1u : 0u;
+                //if (prefs.fHideAdvancedAutoListMembers != val) {
+                //    prefs.fHideAdvancedAutoListMembers = val;
+                //    _service.SetLanguagePreferences(prefs);
+                //}
             }
         }
 

@@ -159,7 +159,9 @@ namespace Microsoft.PythonTools.Repl {
                 true,
                 curId,
                 Strings.ReplCaptionNoEvaluator,
-                typeof(Navigation.PythonLanguageInfo).GUID,
+                // LSC
+                //typeof(Navigation.PythonLanguageInfo).GUID,
+                GuidList.guidPythonLanguageServiceGuid,
                 "PythonInteractive"
             );
 
@@ -217,7 +219,9 @@ namespace Microsoft.PythonTools.Repl {
                 false,
                 curId,
                 title,
-                typeof(Navigation.PythonLanguageInfo).GUID,
+                // LSC
+                //typeof(Navigation.PythonLanguageInfo).GUID,
+                GuidList.guidPythonLanguageServiceGuid,
                 replId
             );
 

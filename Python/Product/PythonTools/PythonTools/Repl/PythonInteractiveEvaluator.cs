@@ -21,7 +21,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Editor;
+// LSC
+//using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -296,12 +297,13 @@ namespace Microsoft.PythonTools.Repl {
                 return ExecutionResult.Success;
             }
 
-            foreach (var buffer in CurrentWindow.TextView.BufferGraph.GetTextBuffers(b => b.ContentType.IsOfType(PythonCoreConstants.ContentType))) {
-                var tb = PythonTextBufferInfo.TryGetForBuffer(buffer);
-                if (tb != null) {
-                    tb.DoNotParse = true;
-                }
-            }
+            // LSC
+            //foreach (var buffer in CurrentWindow.TextView.BufferGraph.GetTextBuffers(b => b.ContentType.IsOfType(PythonCoreConstants.ContentType))) {
+            //    var tb = PythonTextBufferInfo.TryGetForBuffer(buffer);
+            //    if (tb != null) {
+            //        tb.DoNotParse = true;
+            //    }
+            //}
 
             if (!quiet) {
                 WriteOutput(Strings.ReplReset);

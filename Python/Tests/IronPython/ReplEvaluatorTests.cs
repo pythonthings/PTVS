@@ -118,39 +118,40 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        public void GenericMethodCompletions() {
-            // http://pytools.codeplex.com/workitem/661
-            using (var replEval = Evaluator) {
-                var replWindow = new MockReplWindow(replEval);
-                replEval._Initialize(replWindow).Wait();
-                var execute = replEval.ExecuteText("from System.Threading.Tasks import Task");
-                execute.Wait();
-                Assert.IsTrue(execute.Result.IsSuccessful);
-                replWindow.ClearScreen();
+        // LSC
+        //[TestMethod, Priority(0)]
+        //public void GenericMethodCompletions() {
+        //    // http://pytools.codeplex.com/workitem/661
+        //    using (var replEval = Evaluator) {
+        //        var replWindow = new MockReplWindow(replEval);
+        //        replEval._Initialize(replWindow).Wait();
+        //        var execute = replEval.ExecuteText("from System.Threading.Tasks import Task");
+        //        execute.Wait();
+        //        Assert.IsTrue(execute.Result.IsSuccessful);
+        //        replWindow.ClearScreen();
 
-                execute = replEval.ExecuteText("def func1(): print 'hello world'\r\n\r\n");
-                execute.Wait();
-                replWindow.ClearScreen();
+        //        execute = replEval.ExecuteText("def func1(): print 'hello world'\r\n\r\n");
+        //        execute.Wait();
+        //        replWindow.ClearScreen();
 
-                Assert.IsTrue(execute.Result.IsSuccessful);
+        //        Assert.IsTrue(execute.Result.IsSuccessful);
 
-                execute = replEval.ExecuteText("t = Task.Factory.StartNew(func1)");
-                execute.Wait();
-                Assert.IsTrue(execute.Result.IsSuccessful);
+        //        execute = replEval.ExecuteText("t = Task.Factory.StartNew(func1)");
+        //        execute.Wait();
+        //        Assert.IsTrue(execute.Result.IsSuccessful);
 
-                replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), replEval.Analyzer);
+        //        replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), replEval.Analyzer);
 
-                CompletionResult[] names = null;
-                for (int retries = 0; retries < 5 && names == null; retries += 1) {
-                    names = replEval.GetMemberNames("t");
-                }
-                Assert.IsNotNull(names, "GetMemberNames call timed out");
-                foreach (var name in names) {
-                    Debug.WriteLine(name.Name);
-                }
-            }
-        }
+        //        CompletionResult[] names = null;
+        //        for (int retries = 0; retries < 5 && names == null; retries += 1) {
+        //            names = replEval.GetMemberNames("t");
+        //        }
+        //        Assert.IsNotNull(names, "GetMemberNames call timed out");
+        //        foreach (var name in names) {
+        //            Debug.WriteLine(name.Name);
+        //        }
+        //    }
+        //}
 
         [TestMethod, Priority(0)]
         public async Task NoTraceFunction() {

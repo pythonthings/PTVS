@@ -80,9 +80,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PythonLanguageClient.cs" />
-    <Compile Include="PythonLanguageClientFactory.cs" />
-    <Compile Include="PythonLanguageServiceProviderCallback.cs" />
+    <None Include="PythonLanguageClient.cs" />
+    <None Include="PythonLanguageClientFactory.cs" />
+    <None Include="PythonLanguageServiceProviderCallback.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="source.extension.vsixmanifest">

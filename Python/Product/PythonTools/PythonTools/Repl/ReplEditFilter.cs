@@ -23,7 +23,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Language;
+// LSC
+//using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -196,14 +197,15 @@ namespace Microsoft.PythonTools.Repl {
                         break;
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
-                switch ((VSConstants.VSStd2KCmdID)nCmdID) {
-                    case VSConstants.VSStd2KCmdID.CANCEL:
-                        var controller = IntellisenseControllerProvider.GetController(_textView);
-                        if (controller != null && controller.DismissCompletionSession()) {
-                            return VSConstants.S_OK;
-                        }
-                        break;
-                }
+                // LSC
+                //switch ((VSConstants.VSStd2KCmdID)nCmdID) {
+                //    case VSConstants.VSStd2KCmdID.CANCEL:
+                //        var controller = IntellisenseControllerProvider.GetController(_textView);
+                //        if (controller != null && controller.DismissCompletionSession()) {
+                //            return VSConstants.S_OK;
+                //        }
+                //        break;
+                //}
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (nCmdID) {
                     case PkgCmdIDList.comboIdReplScopes:

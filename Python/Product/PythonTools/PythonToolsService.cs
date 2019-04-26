@@ -30,7 +30,8 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
-using Microsoft.PythonTools.Navigation;
+// LSC
+//using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
@@ -49,11 +50,13 @@ namespace Microsoft.PythonTools {
     /// </summary>
     public sealed class PythonToolsService : IDisposable {
         private readonly IServiceContainer _container;
-        private readonly Lazy<LanguagePreferences> _langPrefs;
+        // LSC
+        //private readonly Lazy<LanguagePreferences> _langPrefs;
         private IPythonToolsOptionsService _optionsService;
         private Lazy<IInterpreterOptionsService> _interpreterOptionsService;
         private Lazy<IInterpreterRegistryService> _interpreterRegistryService;
-        private readonly ConcurrentDictionary<string, VsProjectAnalyzer> _analyzers;
+        // LSC
+        //private readonly ConcurrentDictionary<string, VsProjectAnalyzer> _analyzers;
         private readonly Lazy<AdvancedEditorOptions> _advancedOptions;
         private readonly Lazy<DebuggerOptions> _debuggerOptions;
         private readonly Lazy<CondaOptions> _condaOptions;
@@ -65,11 +68,13 @@ namespace Microsoft.PythonTools {
         private readonly Lazy<SuppressDialogOptions> _suppressDialogOptions;
         private readonly IdleManager _idleManager;
         private readonly DiagnosticsProvider _diagnosticsProvider;
-        private ExpansionCompletionSource _expansionCompletions;
+        // LSC
+        //private ExpansionCompletionSource _expansionCompletions;
         private Func<CodeFormattingOptions> _optionsFactory;
         private const string _formattingCat = "Formatting";
 
-        private readonly Dictionary<IVsCodeWindow, CodeWindowManager> _codeWindowManagers = new Dictionary<IVsCodeWindow, CodeWindowManager>();
+        // LSC
+        //private readonly Dictionary<IVsCodeWindow, CodeWindowManager> _codeWindowManagers = new Dictionary<IVsCodeWindow, CodeWindowManager>();
 
         private static readonly Dictionary<string, OptionInfo> _allFormattingOptions = new Dictionary<string, OptionInfo>();
 
@@ -88,9 +93,10 @@ namespace Microsoft.PythonTools {
 
         internal PythonToolsService(IServiceContainer container) {
             _container = container;
-            _analyzers = new ConcurrentDictionary<string, VsProjectAnalyzer>();
+            // LSC
+            //_analyzers = new ConcurrentDictionary<string, VsProjectAnalyzer>();
 
-            _langPrefs = new Lazy<LanguagePreferences>(() => new LanguagePreferences(this, typeof(PythonLanguageInfo).GUID));
+            //_langPrefs = new Lazy<LanguagePreferences>(() => new LanguagePreferences(this, typeof(PythonLanguageInfo).GUID));
             _interpreterOptionsService = new Lazy<IInterpreterOptionsService>(Site.GetComponentModel().GetService<IInterpreterOptionsService>);
             _interpreterRegistryService = new Lazy<IInterpreterRegistryService>(Site.GetComponentModel().GetService<IInterpreterRegistryService>);
 
@@ -113,8 +119,9 @@ namespace Microsoft.PythonTools {
 
             _idleManager.OnIdle += OnIdleInitialization;
 
-            EditorServices = ComponentModel.GetService<PythonEditorServices>();
-            EditorServices.SetPythonToolsService(this);
+            // LSC
+            //EditorServices = ComponentModel.GetService<PythonEditorServices>();
+            //EditorServices.SetPythonToolsService(this);
         }
 
         private void OnIdleInitialization(object sender, ComponentManagerEventArgs e) {
@@ -122,26 +129,29 @@ namespace Microsoft.PythonTools {
 
             _idleManager.OnIdle -= OnIdleInitialization;
 
-            _expansionCompletions = new ExpansionCompletionSource(Site);
+            // LSC
+            //_expansionCompletions = new ExpansionCompletionSource(Site);
             InitializeLogging();
             EnvironmentSwitcherManager.Initialize();
         }
 
         public void Dispose() {
-            if (_langPrefs.IsValueCreated) {
-                _langPrefs.Value.Dispose();
-            }
+            // LSC
+            //if (_langPrefs.IsValueCreated) {
+            //    _langPrefs.Value.Dispose();
+            //}
 
             _idleManager.Dispose();
 
-            foreach (var window in _codeWindowManagers.Values.ToArray()) {
-                window.RemoveAdornments();
-            }
-            _codeWindowManagers.Clear();
+            // LSC
+            //foreach (var window in _codeWindowManagers.Values.ToArray()) {
+            //    window.RemoveAdornments();
+            //}
+            //_codeWindowManagers.Clear();
 
-            foreach (var kv in GetActiveSharedAnalyzers()) {
-                kv.Value.Dispose();
-            }
+            //foreach (var kv in GetActiveSharedAnalyzers()) {
+            //    kv.Value.Dispose();
+            //}
 
             EnvironmentSwitcherManager.Dispose();
             WorkspaceInfoBarManager.Dispose();
@@ -174,7 +184,8 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        internal PythonEditorServices EditorServices { get; }
+        // LSC
+        //internal PythonEditorServices EditorServices { get; }
 
         internal void GetDiagnosticsLog(TextWriter writer, bool includeAnalysisLogs) {
             _diagnosticsProvider.WriteLog(writer, includeAnalysisLogs);
@@ -189,14 +200,15 @@ namespace Microsoft.PythonTools {
 
         internal WorkspaceInfoBarManager WorkspaceInfoBarManager { get; }
 
-        internal Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory) {
-            if (factory == null) {
-                var configuration = new VisualStudioInterpreterConfiguration("AnalysisOnly|2.7", "Analysis Only 2.7", version: new Version(2, 7));
-                factory = InterpreterFactoryCreator.CreateInterpreterFactory(configuration);
-            }
+        // LSC
+        //internal Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory) {
+        //    if (factory == null) {
+        //        var configuration = new VisualStudioInterpreterConfiguration("AnalysisOnly|2.7", "Analysis Only 2.7", version: new Version(2, 7));
+        //        factory = InterpreterFactoryCreator.CreateInterpreterFactory(configuration);
+        //    }
 
-            return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, factory);
-        }
+        //    return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, factory);
+        //}
 
         #region Public API
 
@@ -206,24 +218,24 @@ namespace Microsoft.PythonTools {
         /// <see cref="VsProjectAnalyzer.RemoveUser"/> and if it returns
         /// <c>true</c>, call <see cref="VsProjectAnalyzer.Dispose"/>.</para>
         /// </summary>
-        internal async Task<VsProjectAnalyzer> GetSharedAnalyzerAsync(IPythonInterpreterFactory factory = null) {
-            var result = TryGetSharedAnalyzer(factory, out var id);
-            if (result != null) {
-                return result;
-            }
+        //internal async Task<VsProjectAnalyzer> GetSharedAnalyzerAsync(IPythonInterpreterFactory factory = null) {
+        //    var result = TryGetSharedAnalyzer(factory, out var id);
+        //    if (result != null) {
+        //        return result;
+        //    }
 
-            if (string.IsNullOrEmpty(id)) {
-                return null;
-            }
+        //    if (string.IsNullOrEmpty(id)) {
+        //        return null;
+        //    }
 
-            factory = factory ?? InterpreterRegistryService.FindInterpreter(id);
-            result = await CreateAnalyzerAsync(factory);
-            var realResult = _analyzers.GetOrAdd(id, result);
-            if (realResult != result && result.RemoveUser()) {
-                result.Dispose();
-            }
-            return realResult;
-        }
+        //    factory = factory ?? InterpreterRegistryService.FindInterpreter(id);
+        //    result = await CreateAnalyzerAsync(factory);
+        //    var realResult = _analyzers.GetOrAdd(id, result);
+        //    if (realResult != result && result.RemoveUser()) {
+        //        result.Dispose();
+        //    }
+        //    return realResult;
+        //}
 
         /// <summary>
         /// Gets an active shared analyzer if one exists and can be
@@ -232,49 +244,49 @@ namespace Microsoft.PythonTools {
         /// is responsible to call <see cref="VsProjectAnalyzer.RemoveUser"/>
         /// and if necessary, <see cref="VsProjectAnalyzer.Dispose"/>.
         /// </summary>
-        internal VsProjectAnalyzer TryGetSharedAnalyzer(IPythonInterpreterFactory factory, out string id, bool addUser = true) {
-            id = factory?.Configuration?.Id;
-            if (string.IsNullOrEmpty(id)) {
-                factory = _interpreterOptionsService.Value?.DefaultInterpreter;
-                id = _interpreterOptionsService.Value?.DefaultInterpreterId ?? string.Empty;
-            }
+        //internal VsProjectAnalyzer TryGetSharedAnalyzer(IPythonInterpreterFactory factory, out string id, bool addUser = true) {
+        //    id = factory?.Configuration?.Id;
+        //    if (string.IsNullOrEmpty(id)) {
+        //        factory = _interpreterOptionsService.Value?.DefaultInterpreter;
+        //        id = _interpreterOptionsService.Value?.DefaultInterpreterId ?? string.Empty;
+        //    }
 
-            if (_analyzers.TryGetValue(id, out var result)) {
-                try {
-                    result.AddUser();
-                    return result;
-                } catch (ObjectDisposedException) {
-                    _analyzers.TryRemove(id, out _);
-                }
-            }
+        //    if (_analyzers.TryGetValue(id, out var result)) {
+        //        try {
+        //            result.AddUser();
+        //            return result;
+        //        } catch (ObjectDisposedException) {
+        //            _analyzers.TryRemove(id, out _);
+        //        }
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
-        internal IEnumerable<KeyValuePair<string, VsProjectAnalyzer>> GetActiveSharedAnalyzers() {
-            return _analyzers.ToArray();
-        }
+        //internal IEnumerable<KeyValuePair<string, VsProjectAnalyzer>> GetActiveSharedAnalyzers() {
+        //    return _analyzers.ToArray();
+        //}
 
-        internal IEnumerable<KeyValuePair<string, VsProjectAnalyzer>> GetActiveAnalyzers() {
-            foreach (var kv in GetActiveSharedAnalyzers()) {
-                var config = _interpreterRegistryService.Value.FindConfiguration(kv.Key);
-                yield return new KeyValuePair<string, VsProjectAnalyzer>(config?.Description ?? kv.Key, kv.Value);
-            }
+        //internal IEnumerable<KeyValuePair<string, VsProjectAnalyzer>> GetActiveAnalyzers() {
+        //    foreach (var kv in GetActiveSharedAnalyzers()) {
+        //        var config = _interpreterRegistryService.Value.FindConfiguration(kv.Key);
+        //        yield return new KeyValuePair<string, VsProjectAnalyzer>(config?.Description ?? kv.Key, kv.Value);
+        //    }
 
-            var sln = (IVsSolution)Site.GetService(typeof(SVsSolution));
-            foreach (var proj in sln.EnumerateLoadedPythonProjects()) {
-                var analyzer = proj.TryGetAnalyzer();
-                if (analyzer != null) {
-                    yield return new KeyValuePair<string, VsProjectAnalyzer>(proj.Caption, analyzer);
-                }
-            }
+        //    var sln = (IVsSolution)Site.GetService(typeof(SVsSolution));
+        //    foreach (var proj in sln.EnumerateLoadedPythonProjects()) {
+        //        var analyzer = proj.TryGetAnalyzer();
+        //        if (analyzer != null) {
+        //            yield return new KeyValuePair<string, VsProjectAnalyzer>(proj.Caption, analyzer);
+        //        }
+        //    }
 
-            var workspaceAnalysis = _container.GetComponentModel().GetService<WorkspaceAnalysis>();
-            var workspaceAnalyzer = workspaceAnalysis.TryGetWorkspaceAnalyzer();
-            if (workspaceAnalyzer != null) {
-                yield return new KeyValuePair<string, VsProjectAnalyzer>(workspaceAnalysis.WorkspaceName, workspaceAnalyzer);
-            }
-        }
+        //    var workspaceAnalysis = _container.GetComponentModel().GetService<WorkspaceAnalysis>();
+        //    var workspaceAnalyzer = workspaceAnalysis.TryGetWorkspaceAnalyzer();
+        //    if (workspaceAnalyzer != null) {
+        //        yield return new KeyValuePair<string, VsProjectAnalyzer>(workspaceAnalysis.WorkspaceName, workspaceAnalyzer);
+        //    }
+        //}
 
         public AdvancedEditorOptions AdvancedOptions => _advancedOptions.Value;
         public DebuggerOptions DebuggerOptions => _debuggerOptions.Value;
@@ -451,7 +463,8 @@ namespace Microsoft.PythonTools {
 
         internal System.IServiceProvider Site => _container;
 
-        internal LanguagePreferences LangPrefs => _langPrefs.Value;
+        // LSC
+        //internal LanguagePreferences LangPrefs => _langPrefs.Value;
 
         /// <summary>
         /// Ensures the shell is loaded before returning language preferences,
@@ -462,13 +475,13 @@ namespace Microsoft.PythonTools {
         /// Should only be called from the UI thread, and you must not
         /// synchronously wait on the returned task.
         /// </remarks>
-        internal async Task<LanguagePreferences> GetLangPrefsAsync() {
-            if (_langPrefs.IsValueCreated) {
-                return _langPrefs.Value;
-            }
-            await _container.WaitForShellInitializedAsync();
-            return _langPrefs.Value;
-        }
+        //internal async Task<LanguagePreferences> GetLangPrefsAsync() {
+        //    if (_langPrefs.IsValueCreated) {
+        //        return _langPrefs.Value;
+        //    }
+        //    await _container.WaitForShellInitializedAsync();
+        //    return _langPrefs.Value;
+        //}
 
         #region Registry Persistance
 
@@ -585,78 +598,78 @@ namespace Microsoft.PythonTools {
             ErrorHandler.ThrowOnFailure(txtMgr.SetUserPreferences2(null, null, new[] { langPrefs }, null));
         }
 
-        internal IEnumerable<CodeWindowManager> CodeWindowManagers {
-            get {
-                return _codeWindowManagers.Values;
-            }
-        }
+        //internal IEnumerable<CodeWindowManager> CodeWindowManagers {
+        //    get {
+        //        return _codeWindowManagers.Values;
+        //    }
+        //}
 
-        internal CodeWindowManager GetOrCreateCodeWindowManager(IVsCodeWindow window) {
-            CodeWindowManager value;
-            if (!_codeWindowManagers.TryGetValue(window, out value)) {
-                _codeWindowManagers[window] = value = new CodeWindowManager(_container, window);
+        //internal CodeWindowManager GetOrCreateCodeWindowManager(IVsCodeWindow window) {
+        //    CodeWindowManager value;
+        //    if (!_codeWindowManagers.TryGetValue(window, out value)) {
+        //        _codeWindowManagers[window] = value = new CodeWindowManager(_container, window);
 
-            }
-            return value;
-        }
+        //    }
+        //    return value;
+        //}
 
-        internal void CodeWindowClosed(IVsCodeWindow window) {
-            _codeWindowManagers.Remove(window);
-        }
+        //internal void CodeWindowClosed(IVsCodeWindow window) {
+        //    _codeWindowManagers.Remove(window);
+        //}
         #endregion
 
         #region Intellisense
 
-        internal CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingPoint point) {
-            if (IsSpaceCompletion(snapshot, point) && session.IsCompleteWordMode()) {
-                // Cannot complete a word immediately after a space
-                session.ClearCompleteWordMode();
-            }
+        //internal CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingPoint point) {
+        //    if (IsSpaceCompletion(snapshot, point) && session.IsCompleteWordMode()) {
+        //        // Cannot complete a word immediately after a space
+        //        session.ClearCompleteWordMode();
+        //    }
 
-            var bi = EditorServices.GetBufferInfo(snapshot.TextBuffer);
-            var entry = bi?.AnalysisEntry;
-            if (entry == null) {
-                return CompletionAnalysis.EmptyCompletionContext;
-            }
+        //    var bi = EditorServices.GetBufferInfo(snapshot.TextBuffer);
+        //    var entry = bi?.AnalysisEntry;
+        //    if (entry == null) {
+        //        return CompletionAnalysis.EmptyCompletionContext;
+        //    }
 
-            var options = session.GetOptions(Site);
-            if (ReverseExpressionParser.IsInGrouping(snapshot, bi.GetTokensInReverseFromPoint(point.GetPoint(snapshot)))) {
-                options = options.Clone();
-                options.IncludeStatementKeywords = false;
-            }
+        //    var options = session.GetOptions(Site);
+        //    if (ReverseExpressionParser.IsInGrouping(snapshot, bi.GetTokensInReverseFromPoint(point.GetPoint(snapshot)))) {
+        //        options = options.Clone();
+        //        options.IncludeStatementKeywords = false;
+        //    }
 
-            return new CompletionAnalysis(
-                EditorServices,
-                session,
-                view,
-                snapshot,
-                point,
-                options
-            );
-        }
+        //    return new CompletionAnalysis(
+        //        EditorServices,
+        //        session,
+        //        view,
+        //        snapshot,
+        //        point,
+        //        options
+        //    );
+        //}
 
-        private static bool IsSpaceCompletion(ITextSnapshot snapshot, ITrackingPoint loc) {
-            var pos = loc.GetPosition(snapshot);
-            if (pos > 0) {
-                return snapshot.GetText(pos - 1, 1) == " ";
-            }
-            return false;
-        }
+        //private static bool IsSpaceCompletion(ITextSnapshot snapshot, ITrackingPoint loc) {
+        //    var pos = loc.GetPosition(snapshot);
+        //    if (pos > 0) {
+        //        return snapshot.GetText(pos - 1, 1) == " ";
+        //    }
+        //    return false;
+        //}
 
-        internal SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
-            var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
-            if (entry == null) {
-                return new SignatureAnalysis("", 0, new ISignature[0]);
-            }
-            return entry.Analyzer.WaitForRequest(entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span), "GetSignatures");
-        }
+        //internal SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
+        //    var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
+        //    if (entry == null) {
+        //        return new SignatureAnalysis("", 0, new ISignature[0]);
+        //    }
+        //    return entry.Analyzer.WaitForRequest(entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span), "GetSignatures");
+        //}
 
-        internal Task<IEnumerable<CompletionResult>> GetExpansionCompletionsAsync() {
-            if (_expansionCompletions == null) {
-                return Task.FromResult<IEnumerable<CompletionResult>>(null);
-            }
-            return _expansionCompletions.GetCompletionsAsync();
-        }
+        //internal Task<IEnumerable<CompletionResult>> GetExpansionCompletionsAsync() {
+        //    if (_expansionCompletions == null) {
+        //        return Task.FromResult<IEnumerable<CompletionResult>>(null);
+        //    }
+        //    return _expansionCompletions.GetCompletionsAsync();
+        //}
 
         #endregion
 

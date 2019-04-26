@@ -125,23 +125,24 @@ namespace Microsoft.PythonTools.Repl {
             await RefreshAvailableScopes();
         }
 
-        public override VsProjectAnalyzer Analyzer {
-            get {
-                if (_analyzer != null) {
-                    return _analyzer;
-                }
+        // LSC
+        //public override VsProjectAnalyzer Analyzer {
+        //    get {
+        //        if (_analyzer != null) {
+        //            return _analyzer;
+        //        }
 
-                if (!string.IsNullOrEmpty(_currentFrameFilename)) {
-                    var project = _serviceProvider.GetProjectContainingFile(_currentFrameFilename);
-                    _analyzer = project?.TryGetAnalyzer();
-                    if (_analyzer != null) {
-                        return _analyzer;
-                    }
-                }
+        //        if (!string.IsNullOrEmpty(_currentFrameFilename)) {
+        //            var project = _serviceProvider.GetProjectContainingFile(_currentFrameFilename);
+        //            _analyzer = project?.TryGetAnalyzer();
+        //            if (_analyzer != null) {
+        //                return _analyzer;
+        //            }
+        //        }
 
-                return base.Analyzer;
-            }
-        }
+        //        return base.Analyzer;
+        //    }
+        //}
 
         internal async Task<KeyValuePair<string, string>[]> RefreshAvailableScopes() {
             var modules = await _process.GetModuleNamesAndPaths();
@@ -352,7 +353,8 @@ namespace Microsoft.PythonTools.Repl {
             _currentScopeFileName = null;
             if (_currentFrameFilename != frame.FileName) {
                 _currentFrameFilename = frame.FileName;
-                _analyzer = null;
+                // LSC
+                //_analyzer = null;
             }
             UpdateFrameLocals(frame);
             if (verbose) {

@@ -61,7 +61,8 @@ namespace Microsoft.PythonTools.Repl {
         private IInteractiveWindow _window;
         private PythonInteractiveOptions _options;
 
-        protected VsProjectAnalyzer _analyzer;
+        // LSC
+        //protected VsProjectAnalyzer _analyzer;
         private Uri _documentUri;
         private int _nextDocumentIndex;
 
@@ -98,7 +99,8 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             if (disposing) {
-                _analyzer?.Dispose();
+                // LSC
+                //_analyzer?.Dispose();
             }
         }
 
@@ -161,57 +163,58 @@ namespace Microsoft.PythonTools.Repl {
             return _serviceProvider.GetWorkspace();
         }
 
-        public virtual VsProjectAnalyzer Analyzer => _analyzer;
+        // LSC
+        //public virtual VsProjectAnalyzer Analyzer => _analyzer;
 
-        public virtual async Task<VsProjectAnalyzer> GetAnalyzerAsync() {
-            if (_analyzer != null) {
-                return _analyzer;
-            }
+        //public virtual async Task<VsProjectAnalyzer> GetAnalyzerAsync() {
+        //    if (_analyzer != null) {
+        //        return _analyzer;
+        //    }
 
-            var config = Configuration;
-            IPythonInterpreterFactory factory = null;
-            if (config?.Interpreter != null) {
-                var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                factory = interpreterService.FindInterpreter(config.Interpreter.Id);
-            }
+        //    var config = Configuration;
+        //    IPythonInterpreterFactory factory = null;
+        //    if (config?.Interpreter != null) {
+        //        var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+        //        factory = interpreterService.FindInterpreter(config.Interpreter.Id);
+        //    }
 
-            return await _serviceProvider.GetUIThread().InvokeTask(async () => {
-                var a = _analyzer;
-                if (a != null) {
-                    return a;
-                }
-                if (factory == null) {
-                    a = await _serviceProvider.GetPythonToolsService().GetSharedAnalyzerAsync();
-                } else {
-                    a = await VsProjectAnalyzer.CreateForInteractiveAsync(
-                        _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
-                        factory,
-                        DisplayName.IfNullOrEmpty("Unnamed")
-                    );
+        //    return await _serviceProvider.GetUIThread().InvokeTask(async () => {
+        //        var a = _analyzer;
+        //        if (a != null) {
+        //            return a;
+        //        }
+        //        if (factory == null) {
+        //            a = await _serviceProvider.GetPythonToolsService().GetSharedAnalyzerAsync();
+        //        } else {
+        //            a = await VsProjectAnalyzer.CreateForInteractiveAsync(
+        //                _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
+        //                factory,
+        //                DisplayName.IfNullOrEmpty("Unnamed")
+        //            );
 
-                    IEnumerable<string> sp;
+        //            IEnumerable<string> sp;
 
-                    var workspace = GetAssociatedPythonWorkspace(config.Interpreter);
-                    var pyProject = GetAssociatedPythonProject(config.Interpreter);
+        //            var workspace = GetAssociatedPythonWorkspace(config.Interpreter);
+        //            var pyProject = GetAssociatedPythonProject(config.Interpreter);
 
-                    if (workspace != null) {
-                        sp = workspace.GetAbsoluteSearchPaths().ToArray();
-                    } else if (pyProject != null) {
-                        sp = pyProject.GetSearchPaths();
-                    } else {
-                        var sln = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-                        sp = sln?.EnumerateLoadedPythonProjects().SelectMany(p => p.GetSearchPaths()).ToArray();
-                    }
-                    await a.SetSearchPathsAsync(sp.MaybeEnumerate());
-                }
-                if (_analyzer != null) {
-                    a.Dispose();
-                } else {
-                    _analyzer = a;
-                }
-                return _analyzer;
-            });
-        }
+        //            if (workspace != null) {
+        //                sp = workspace.GetAbsoluteSearchPaths().ToArray();
+        //            } else if (pyProject != null) {
+        //                sp = pyProject.GetSearchPaths();
+        //            } else {
+        //                var sln = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+        //                sp = sln?.EnumerateLoadedPythonProjects().SelectMany(p => p.GetSearchPaths()).ToArray();
+        //            }
+        //            await a.SetSearchPathsAsync(sp.MaybeEnumerate());
+        //        }
+        //        if (_analyzer != null) {
+        //            a.Dispose();
+        //        } else {
+        //            _analyzer = a;
+        //        }
+        //        return _analyzer;
+        //    });
+        //}
 
         public virtual Uri DocumentUri { get => _documentUri; protected set => _documentUri = value; }
         public virtual Uri NextDocumentUri() {
@@ -665,8 +668,9 @@ namespace Microsoft.PythonTools.Repl {
             if (langBuffer != null) {
                 // Reinitializing, and our new language buffer does not automatically
                 // get connected to the Intellisense controller. Let's fix that.
-                var controller = IntellisenseControllerProvider.GetController(_window.TextView);
-                controller?.ConnectSubjectBuffer(langBuffer);
+                // LSC
+                //var controller = IntellisenseControllerProvider.GetController(_window.TextView);
+                //controller?.ConnectSubjectBuffer(langBuffer);
             }
 
             _window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, UseSmartHistoryKeys);

@@ -16,7 +16,8 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Navigation;
+// LSC
+//using Microsoft.PythonTools.Navigation;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools.Project;
@@ -35,7 +36,9 @@ namespace Microsoft.PythonTools.Project {
         public PythonEditorFactory(CommonProjectPackage package, bool promptForEncoding) : base(package, promptForEncoding) { }
 
         protected override void InitializeLanguageService(IVsTextLines textLines) {
-            InitializeLanguageService(textLines, typeof(PythonLanguageInfo).GUID);
+            // LSC
+            InitializeLanguageService(textLines, new Guid(GuidList.guidPythonLanguageService));
+            //InitializeLanguageService(textLines, typeof(PythonLanguageInfo).GUID);
         }
 
         public override int CreateEditorInstance(uint createEditorFlags, string documentMoniker, string physicalView, IVsHierarchy hierarchy, uint itemid, IntPtr docDataExisting, out IntPtr docView, out IntPtr docData, out string editorCaption, out Guid commandUIGuid, out int createDocumentWindowFlags) {

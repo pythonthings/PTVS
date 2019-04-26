@@ -234,20 +234,21 @@ namespace Microsoft.PythonTools.Repl {
 
         public IInteractiveWindow CurrentWindow { get; set; }
 
-        public VsProjectAnalyzer Analyzer => _activeEvaluator?.Analyzer;
-        public Task<VsProjectAnalyzer> GetAnalyzerAsync() {
-            if (_activeEvaluator != null) {
-                return _activeEvaluator.GetAnalyzerAsync();
-            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
-                var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
-                var currentFrameFilename = CustomDebugAdapterProtocolExtension.GetCurrentFrameFilename(tid);
-                var project = _serviceProvider.GetProjectContainingFile(currentFrameFilename);
-                if (project != null) {
-                    return project.GetAnalyzerAsync();
-                }
-            }
-            return Task.FromResult<VsProjectAnalyzer>(null);
-        }
+        // LSC
+        //public VsProjectAnalyzer Analyzer => _activeEvaluator?.Analyzer;
+        //public Task<VsProjectAnalyzer> GetAnalyzerAsync() {
+        //    if (_activeEvaluator != null) {
+        //        return _activeEvaluator.GetAnalyzerAsync();
+        //    } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
+        //        var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
+        //        var currentFrameFilename = CustomDebugAdapterProtocolExtension.GetCurrentFrameFilename(tid);
+        //        var project = _serviceProvider.GetProjectContainingFile(currentFrameFilename);
+        //        if (project != null) {
+        //            return project.GetAnalyzerAsync();
+        //        }
+        //    }
+        //    return Task.FromResult<VsProjectAnalyzer>(null);
+        //}
 
         public Uri DocumentUri {
             get {
@@ -624,8 +625,9 @@ namespace Microsoft.PythonTools.Repl {
             if (langBuffer != null) {
                 // Reinitializing, and our new language buffer does not automatically
                 // get connected to the Intellisense controller. Let's fix that.
-                var controller = IntellisenseControllerProvider.GetController(CurrentWindow.TextView);
-                controller?.ConnectSubjectBuffer(langBuffer);
+                // LSC
+                //var controller = IntellisenseControllerProvider.GetController(CurrentWindow.TextView);
+                //controller?.ConnectSubjectBuffer(langBuffer);
             }
 
             CurrentWindow.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, CurrentOptions.UseSmartHistory);

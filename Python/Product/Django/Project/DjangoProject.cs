@@ -86,11 +86,12 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
-        public VsProjectAnalyzer Analyzer {
-            get {
-                return _innerVsHierarchy.GetProject().GetPythonProject().GetProjectAnalyzer() as VsProjectAnalyzer;
-            }
-        }
+        // LSC
+        //public VsProjectAnalyzer Analyzer {
+        //    get {
+        //        return _innerVsHierarchy.GetProject().GetPythonProject().GetProjectAnalyzer() as VsProjectAnalyzer;
+        //    }
+        //}
 
         #region IVsAggregatableProject
 
@@ -127,11 +128,12 @@ namespace Microsoft.PythonTools.Django.Project {
             AddCommand(menuItem);
 
 #if DJANGO_HTML_EDITOR
-            var pyProj = _innerVsHierarchy.GetProject().GetPythonProject();
-            if (pyProj != null) {
-                RegisterExtension(pyProj.GetProjectAnalyzer() as VsProjectAnalyzer);
-                pyProj.ProjectAnalyzerChanging += OnProjectAnalyzerChanging;
-            }
+            // LSC
+            //var pyProj = _innerVsHierarchy.GetProject().GetPythonProject();
+            //if (pyProj != null) {
+            //    RegisterExtension(pyProj.GetProjectAnalyzer() as VsProjectAnalyzer);
+            //    pyProj.ProjectAnalyzerChanging += OnProjectAnalyzerChanging;
+            //}
 #endif
 
             object extObject;
@@ -159,21 +161,22 @@ namespace Microsoft.PythonTools.Django.Project {
         #endregion
 
 #if DJANGO_HTML_EDITOR
-        private void OnProjectAnalyzerChanging(object sender, AnalyzerChangingEventArgs e) {
-            var pyProj = sender as IPythonProject;
-            if (pyProj != null) {
-                RegisterExtension(e.New as VsProjectAnalyzer);
-            }
-        }
+        // LSC
+        //private void OnProjectAnalyzerChanging(object sender, AnalyzerChangingEventArgs e) {
+        //    var pyProj = sender as IPythonProject;
+        //    if (pyProj != null) {
+        //        RegisterExtension(e.New as VsProjectAnalyzer);
+        //    }
+        //}
 
-        private void RegisterExtension(VsProjectAnalyzer newAnalyzer) {
-            if (newAnalyzer == null) {
-                return;
-            }
-            newAnalyzer.RegisterExtensionAsync(typeof(DjangoAnalyzer))
-                .HandleAllExceptions(serviceProvider, GetType(), allowUI: false)
-                .DoNotWait();
-        }
+        //private void RegisterExtension(VsProjectAnalyzer newAnalyzer) {
+        //    if (newAnalyzer == null) {
+        //        return;
+        //    }
+        //    newAnalyzer.RegisterExtensionAsync(typeof(DjangoAnalyzer))
+        //        .HandleAllExceptions(serviceProvider, GetType(), allowUI: false)
+        //        .DoNotWait();
+        //}
 #endif
 
         private void AddCommand(OleMenuCommand menuItem) {

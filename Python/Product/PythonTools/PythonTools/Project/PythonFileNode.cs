@@ -155,13 +155,14 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override bool Remove(bool removeFromStorage) {
-            var analyzer = TryGetAnalyzer();
-            if (analyzer != null) {
-                var entry = analyzer.GetAnalysisEntryFromPath(Url);
-                if (entry != null) {
-                    analyzer.UnloadFileAsync(entry).DoNotWait();
-                }
-            }
+            // LSC
+            //var analyzer = TryGetAnalyzer();
+            //if (analyzer != null) {
+            //    var entry = analyzer.GetAnalysisEntryFromPath(Url);
+            //    if (entry != null) {
+            //        analyzer.UnloadFileAsync(entry).DoNotWait();
+            //    }
+            //}
 
             if (Url.EndsWithOrdinal(PythonConstants.FileExtension, ignoreCase: true) && removeFromStorage) {
                 TryDelete(Url + "c");
@@ -189,13 +190,14 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private VsProjectAnalyzer TryGetAnalyzer() {
-            return ((PythonProjectNode)ProjectMgr).TryGetAnalyzer();
-        }
+        // LSC
+        //private VsProjectAnalyzer TryGetAnalyzer() {
+        //    return ((PythonProjectNode)ProjectMgr).TryGetAnalyzer();
+        //}
 
-        public AnalysisEntry TryGetAnalysisEntry() {
-            return TryGetAnalyzer()?.GetAnalysisEntryFromPath(Url);
-        }
+        //public AnalysisEntry TryGetAnalysisEntry() {
+        //    return TryGetAnalyzer()?.GetAnalysisEntryFromPath(Url);
+        //}
 
         private void TryRename(string oldFile, string newFile) {
             if (!File.Exists(oldFile) || File.Exists(newFile)) {
@@ -226,31 +228,34 @@ namespace Microsoft.PythonTools.Project {
             if (res != null) {
                 // Analyzer has not changed, but because the filename has we need to
                 // do a transfer.
-                var oldEntry = TryGetAnalyzer()?.GetAnalysisEntryFromPath(oldFileName);
-                if (oldEntry != null) {
-                    oldEntry.Analyzer.TransferFileFromOldAnalyzer(oldEntry, GetMkDocument())
-                        .HandleAllExceptions(ProjectMgr.Site, GetType())
-                        .DoNotWait();
-                }
+                // LSC
+                //var oldEntry = TryGetAnalyzer()?.GetAnalysisEntryFromPath(oldFileName);
+                //if (oldEntry != null) {
+                //    oldEntry.Analyzer.TransferFileFromOldAnalyzer(oldEntry, GetMkDocument())
+                //        .HandleAllExceptions(ProjectMgr.Site, GetType())
+                //        .DoNotWait();
+                //}
             }
             return res;
         }
 
         internal override int IncludeInProject(bool includeChildren) {
-            var analyzer = TryGetAnalyzer();
-            analyzer?.AnalyzeFileAsync(Url).DoNotWait();
+            // LSC
+            //var analyzer = TryGetAnalyzer();
+            //analyzer?.AnalyzeFileAsync(Url).DoNotWait();
 
             return base.IncludeInProject(includeChildren);
         }
 
         internal override int ExcludeFromProject() {
-            var analyzer = TryGetAnalyzer();
-            if (analyzer != null) {
-                var analysis = analyzer.GetAnalysisEntryFromPath(Url);
-                if (analysis != null) {
-                    analyzer.UnloadFileAsync(analysis).DoNotWait();
-                }
-            }
+            // LSC
+            //var analyzer = TryGetAnalyzer();
+            //if (analyzer != null) {
+            //    var analysis = analyzer.GetAnalysisEntryFromPath(Url);
+            //    if (analysis != null) {
+            //        analyzer.UnloadFileAsync(analysis).DoNotWait();
+            //    }
+            //}
 
             return base.ExcludeFromProject();
         }

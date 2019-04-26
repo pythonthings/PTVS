@@ -126,13 +126,14 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private async Task OnProjectLoadedAsync(IVsProject project) {
-            var pyProj = PythonProject.FromObject(project);
-            if (pyProj != null) {
-                var analyzer = await pyProj.GetAnalyzerAsync();
-                if (analyzer != null) {
-                    _projectInfo[pyProj] = new ProjectInfo(this, pyProj);
-                }
-            }
+            // LSC
+            //var pyProj = PythonProject.FromObject(project);
+            //if (pyProj != null) {
+            //    var analyzer = await pyProj.GetAnalyzerAsync();
+            //    if (analyzer != null) {
+            //        _projectInfo[pyProj] = new ProjectInfo(this, pyProj);
+            //    }
+            //}
 
             TestContainersUpdated?.Invoke(this, EventArgs.Empty);
         }
@@ -166,7 +167,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
                 _pendingRequests = new List<string>();
 
-                project.ProjectAnalyzerChanged += ProjectAnalyzerChanged;
+                // LSC
+                //project.ProjectAnalyzerChanged += ProjectAnalyzerChanged;
                 RegisterWithAnalyzerAsync().HandleAllExceptions(_discoverer._serviceProvider, GetType()).DoNotWait();
             }
 
@@ -174,7 +176,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (_analyzer != null) {
                     _analyzer.AnalysisComplete -= AnalysisComplete;
                 }
-                _project.ProjectAnalyzerChanged -= ProjectAnalyzerChanged;
+                // LSC
+                //_project.ProjectAnalyzerChanged -= ProjectAnalyzerChanged;
             }
 
             public TestContainer[] GetAllContainers() {
@@ -199,7 +202,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (_analyzer != null) {
                     _analyzer.AnalysisComplete -= AnalysisComplete;
                 }
-                _analyzer = await _project.GetAnalyzerAsync();
+                // LSC
+                //_analyzer = await _project.GetAnalyzerAsync();
+                _analyzer = null;
                 if (_analyzer != null) {
                     _analyzer.AnalysisComplete += AnalysisComplete;
                     await _analyzer.RegisterExtensionAsync(typeof(TestAnalyzer)).ConfigureAwait(false);

@@ -118,12 +118,12 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AddImportTests.cs" />
+    <None Include="AddImportTests.cs" />
     <Compile Include="InfoBarUITests.cs" />
     <Compile Include="ErrorListTaskListTests.cs" />
     <Compile Include="BasicProjectTests.cs" />
     <Compile Include="BuildTasksUITests.cs" />
-    <Compile Include="EditorTests.cs" />
+    <None Include="EditorTests.cs" />
     <Compile Include="FormattingUITests.cs" />
     <Compile Include="NugetTests.cs" />
     <Compile Include="ObjectBrowserTest.cs" />
@@ -131,7 +131,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestExplorerTests.cs" />
     <Compile Include="PublishTest.cs" />
-    <Compile Include="RemoveImportTests.cs" />
+    <None Include="RemoveImportTests.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

@@ -25,8 +25,9 @@ namespace Microsoft.PythonTools.Repl {
         IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths();
         CompletionResult[] GetMemberNames(string text);
         OverloadDoc[] GetSignatureDocumentation(string text);
-        VsProjectAnalyzer Analyzer { get; }
-        Task<VsProjectAnalyzer> GetAnalyzerAsync();
+        // LSC
+        //VsProjectAnalyzer Analyzer { get; }
+        //Task<VsProjectAnalyzer> GetAnalyzerAsync();
         Uri DocumentUri { get; }
 
         Uri NextDocumentUri();

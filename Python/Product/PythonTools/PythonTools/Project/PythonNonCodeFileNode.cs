@@ -68,47 +68,53 @@ namespace Microsoft.PythonTools.Project {
             }
 
             public string[] FindMethods(string className, int? paramCount) {
-                var fileInfo = _node.TryGetAnalysisEntry();
-                if (fileInfo == null) {
-                    return Array.Empty<string>();
-                }
-                return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.FindMethodsAsync(
-                    fileInfo,
-                    _node.GetTextBuffer(),
-                    className,
-                    paramCount
-                ), "PythonNonCodeFileNode.FindMethods");
+                return Array.Empty<string>();
+                // LSC
+                //var fileInfo = _node.TryGetAnalysisEntry();
+                //if (fileInfo == null) {
+                //    return Array.Empty<string>();
+                //}
+                //return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.FindMethodsAsync(
+                //    fileInfo,
+                //    _node.GetTextBuffer(),
+                //    className,
+                //    paramCount
+                //), "PythonNonCodeFileNode.FindMethods");
             }
 
             public InsertionPoint GetInsertionPoint(string className) {
-                var fileInfo = _node.TryGetAnalysisEntry();
-                if (fileInfo == null) {
-                    return null;
-                }
-                return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.GetInsertionPointAsync(
-                    Buffer?.CurrentSnapshot,
-                    className,
-                    fileInfo
-                ), "PythonNonCodeFileNode.GetInsertionPoint");
+                return null;
+                // LSC
+                //var fileInfo = _node.TryGetAnalysisEntry();
+                //if (fileInfo == null) {
+                //    return null;
+                //}
+                //return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.GetInsertionPointAsync(
+                //    Buffer?.CurrentSnapshot,
+                //    className,
+                //    fileInfo
+                //), "PythonNonCodeFileNode.GetInsertionPoint");
             }
 
             public MethodInformation GetMethodInfo(string className, string methodName) {
-                var fileInfo = _node.TryGetAnalysisEntry();
-                if (fileInfo == null) {
-                    return null;
-                }
-                var info = fileInfo.Analyzer.WaitForRequest(
-                    fileInfo.Analyzer.GetMethodInfoAsync(fileInfo, _node.GetTextBuffer(), className, methodName),
-                    "PythonNonCodeFileNode.GetMethodInfo"
-                );
-                if (info != null) {
-                    return new MethodInformation(
-                        info.start,
-                        info.end,
-                        info.found
-                    );
-                }
                 return null;
+                // LSC
+                //var fileInfo = _node.TryGetAnalysisEntry();
+                //if (fileInfo == null) {
+                //    return null;
+                //}
+                //var info = fileInfo.Analyzer.WaitForRequest(
+                //    fileInfo.Analyzer.GetMethodInfoAsync(fileInfo, _node.GetTextBuffer(), className, methodName),
+                //    "PythonNonCodeFileNode.GetMethodInfo"
+                //);
+                //if (info != null) {
+                //    return new MethodInformation(
+                //        info.start,
+                //        info.end,
+                //        info.found
+                //    );
+                //}
+                //return null;
             }
         }
 

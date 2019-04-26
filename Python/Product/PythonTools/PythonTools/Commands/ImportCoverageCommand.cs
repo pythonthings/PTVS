@@ -20,7 +20,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using Microsoft.PythonTools.CodeCoverage;
-using Microsoft.PythonTools.Editor;
+// LSC
+//using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
@@ -90,14 +91,15 @@ namespace Microsoft.PythonTools.Commands {
                 CoverageFileInfo[] fileInfo = new CoveragePyConverter(baseDir, tmp).Parse();
 
                 // Discover what version we should use for this if one hasn't been provided...
-                if (version == null) {
-                    foreach (var file in fileInfo) {
-                        version = ((await _serviceProvider.FindAnalyzerAsync(file.Filename)) as VsProjectAnalyzer)?.LanguageVersion;
-                        if (version.HasValue) {
-                            break;
-                        }
-                    }
-                }
+                // LSC
+                //if (version == null) {
+                //    foreach (var file in fileInfo) {
+                //        version = ((await _serviceProvider.FindAnalyzerAsync(file.Filename)) as VsProjectAnalyzer)?.LanguageVersion;
+                //        if (version.HasValue) {
+                //            break;
+                //        }
+                //    }
+                //}
 
                 // Convert that into offsets within the actual code
                 var covInfo = Import(fileInfo, version ?? PythonLanguageVersion.None);

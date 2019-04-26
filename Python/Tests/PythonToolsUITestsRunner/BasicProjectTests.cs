@@ -190,41 +190,42 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetReferences));
         }
 
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void DotNetSearchPathReferences() {
-            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetSearchPathReferences));
-        }
+        // LSC
+        //[TestMethod, Priority(0)]
+        //[TestCategory("Installed")]
+        //public void DotNetSearchPathReferences() {
+        //    _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetSearchPathReferences));
+        //}
 
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void DotNetProjectReferences() {
-            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetProjectReferences));
-        }
+        //[TestMethod, Priority(2)]
+        //[TestCategory("Installed")]
+        //public void DotNetProjectReferences() {
+        //    _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetProjectReferences));
+        //}
 
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void DotNetAssemblyReferences() {
-            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetAssemblyReferences));
-        }
+        //[TestMethod, Priority(2)]
+        //[TestCategory("Installed")]
+        //public void DotNetAssemblyReferences() {
+        //    _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetAssemblyReferences));
+        //}
 
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void MultipleDotNetAssemblyReferences() {
-            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.MultipleDotNetAssemblyReferences));
-        }
+        //[TestMethod, Priority(2)]
+        //[TestCategory("Installed")]
+        //public void MultipleDotNetAssemblyReferences() {
+        //    _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.MultipleDotNetAssemblyReferences));
+        //}
 
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void MultiProjectAnalysis() {
-            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.MultiProjectAnalysis));
-        }
+        //[TestMethod, Priority(2)]
+        //[TestCategory("Installed")]
+        //public void MultiProjectAnalysis() {
+        //    _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.MultiProjectAnalysis));
+        //}
 
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void CProjectReference() {
-            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.CProjectReference));
-        }
+        //[TestMethod, Priority(2)]
+        //[TestCategory("Installed")]
+        //public void CProjectReference() {
+        //    _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.CProjectReference));
+        //}
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]

@@ -16,7 +16,8 @@
 
 using System;
 using System.Diagnostics;
-using Microsoft.PythonTools.Editor.Core;
+// LSC
+//using Microsoft.PythonTools.Editor.Core;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -36,41 +37,45 @@ namespace Microsoft.PythonTools.Commands {
             _allScopes = allScopes;
         }
 
-        public override async void DoCommand(object sender, EventArgs args) {
-            var view = CommonPackage.GetActiveTextView(_serviceProvider);
-            var analyzer = view?.GetAnalyzerAtCaret(_serviceProvider);
-
-            if (analyzer == null) {
-                // Can sometimes race with initializing the analyzer (probably
-                // only in tests), so delay slightly until we get an analyzer
-                for (int retries = 10; retries > 0 && analyzer == null; --retries) {
-                    await Task.Delay(10);
-                    view = CommonPackage.GetActiveTextView(_serviceProvider);
-                    analyzer = view?.GetAnalyzerAtCaret(_serviceProvider);
-                }
-            }
-
-            var pythonCaret = view?.GetPythonCaret();
-            if (analyzer == null || !pythonCaret.HasValue) {
-                Debug.Fail("Executed RemoveImportsCommand with invalid view");
-                return;
-            }
-
-            await analyzer.RemoveImportsAsync(pythonCaret.Value, _allScopes);
+        // LSC
+        public override void DoCommand(object sender, EventArgs args) {
         }
 
-        public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
-            var view = CommonPackage.GetActiveTextView(_serviceProvider);
-            var analyzer = view?.GetAnalyzerAtCaret(_serviceProvider);
-            var pythonCaret = view?.GetPythonCaret();
-            if (view != null && analyzer != null && pythonCaret.HasValue) {
-                cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-            } else {
-                cmd.cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
-            }
+        //public override async void DoCommand(object sender, EventArgs args) {
+        //    var view = CommonPackage.GetActiveTextView(_serviceProvider);
+        //    var analyzer = view?.GetAnalyzerAtCaret(_serviceProvider);
 
-            return VSConstants.S_OK;
-        }
+        //    if (analyzer == null) {
+        //        // Can sometimes race with initializing the analyzer (probably
+        //        // only in tests), so delay slightly until we get an analyzer
+        //        for (int retries = 10; retries > 0 && analyzer == null; --retries) {
+        //            await Task.Delay(10);
+        //            view = CommonPackage.GetActiveTextView(_serviceProvider);
+        //            analyzer = view?.GetAnalyzerAtCaret(_serviceProvider);
+        //        }
+        //    }
+
+        //    var pythonCaret = view?.GetPythonCaret();
+        //    if (analyzer == null || !pythonCaret.HasValue) {
+        //        Debug.Fail("Executed RemoveImportsCommand with invalid view");
+        //        return;
+        //    }
+
+        //    await analyzer.RemoveImportsAsync(pythonCaret.Value, _allScopes);
+        //}
+
+        //public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
+        //    var view = CommonPackage.GetActiveTextView(_serviceProvider);
+        //    var analyzer = view?.GetAnalyzerAtCaret(_serviceProvider);
+        //    var pythonCaret = view?.GetPythonCaret();
+        //    if (view != null && analyzer != null && pythonCaret.HasValue) {
+        //        cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+        //    } else {
+        //        cmd.cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+        //    }
+
+        //    return VSConstants.S_OK;
+        //}
 
         public override EventHandler BeforeQueryStatus {
             get {

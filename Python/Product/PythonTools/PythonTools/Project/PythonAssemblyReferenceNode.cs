@@ -25,30 +25,34 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     sealed class PythonAssemblyReferenceNode : AssemblyReferenceNode {
-        private bool _failedToAnalyze;
+        // LSC
+        //private bool _failedToAnalyze;
 
         public PythonAssemblyReferenceNode(PythonProjectNode root, ProjectElement element)
             : base(root, element) {
-            root.ProjectAnalyzerChanged += ProjectAnalyzerChanged;
+            // LSC
+            //root.ProjectAnalyzerChanged += ProjectAnalyzerChanged;
 
-            AnalyzeReferenceAsync(root.TryGetAnalyzer())
-                .HandleAllExceptions(ProjectMgr.Site, GetType())
-                .DoNotWait();
+            //AnalyzeReferenceAsync(root.TryGetAnalyzer())
+            //    .HandleAllExceptions(ProjectMgr.Site, GetType())
+            //    .DoNotWait();
         }
 
         public PythonAssemblyReferenceNode(PythonProjectNode root, string assemblyPath)
             : base(root, assemblyPath) {
-            root.ProjectAnalyzerChanged += ProjectAnalyzerChanged;
+            // LSC
+            //root.ProjectAnalyzerChanged += ProjectAnalyzerChanged;
 
-            AnalyzeReferenceAsync(root.TryGetAnalyzer())
-                .HandleAllExceptions(ProjectMgr.Site, GetType())
-                .DoNotWait();
+            //AnalyzeReferenceAsync(root.TryGetAnalyzer())
+            //    .HandleAllExceptions(ProjectMgr.Site, GetType())
+            //    .DoNotWait();
         }
 
         private void ProjectAnalyzerChanged(object sender, EventArgs e) {
-            AnalyzeReferenceAsync(((PythonProjectNode)ProjectMgr).TryGetAnalyzer())
-                .HandleAllExceptions(ProjectMgr.Site, GetType())
-                .DoNotWait();
+            // LSC
+            //AnalyzeReferenceAsync(((PythonProjectNode)ProjectMgr).TryGetAnalyzer())
+            //    .HandleAllExceptions(ProjectMgr.Site, GetType())
+            //    .DoNotWait();
         }
 
         protected override void OnAssemblyReferenceChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
@@ -60,47 +64,51 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task ReferenceChangedOnDisk(FileChangedOnDiskEventArgs e) {
-            var analyzer = ((PythonProjectNode)ProjectMgr).TryGetAnalyzer();
-            if (analyzer != null && PathUtils.IsSamePath(e.FileName, Url)) {
-                if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
-                    // file was modified, unload and reload the extension module from our database.
-                    await analyzer.RemoveReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
-                    await AnalyzeReferenceAsync(analyzer);
-                } else if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) != 0) {
-                    // file was deleted, unload from our extension database
-                    await analyzer.RemoveReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
-                }
-            }
+            // LSC
+            //var analyzer = ((PythonProjectNode)ProjectMgr).TryGetAnalyzer();
+            //if (analyzer != null && PathUtils.IsSamePath(e.FileName, Url)) {
+            //    if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
+            //        // file was modified, unload and reload the extension module from our database.
+            //        await analyzer.RemoveReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
+            //        await AnalyzeReferenceAsync(analyzer);
+            //    } else if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) != 0) {
+            //        // file was deleted, unload from our extension database
+            //        await analyzer.RemoveReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
+            //    }
+            //}
         }
 
-        private async Task AnalyzeReferenceAsync(VsProjectAnalyzer interp) {
-            if (interp == null) {
-                _failedToAnalyze = true;
-                return;
-            }
+        // LSC
+        //private async Task AnalyzeReferenceAsync(VsProjectAnalyzer interp) {
+        //    if (interp == null) {
+        //        _failedToAnalyze = true;
+        //        return;
+        //    }
 
-            _failedToAnalyze = false;
+        //    _failedToAnalyze = false;
 
-            var resp = await interp.AddReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
-            if (resp == null) {
-                _failedToAnalyze = true;
-            }
-        }
+        //    var resp = await interp.AddReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
+        //    if (resp == null) {
+        //        _failedToAnalyze = true;
+        //    }
+        //}
 
         protected override bool CanShowDefaultIcon() {
-            if (_failedToAnalyze) {
-                return false;
-            }
+            // LSC
+            //if (_failedToAnalyze) {
+            //    return false;
+            //}
 
             return base.CanShowDefaultIcon();
         }
 
         public override bool Remove(bool removeFromStorage) {
             if (base.Remove(removeFromStorage)) {
-                var interp = ((PythonProjectNode)ProjectMgr).TryGetAnalyzer();
-                if (interp != null) {
-                    interp.RemoveReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
-                }
+                // LSC
+                //var interp = ((PythonProjectNode)ProjectMgr).TryGetAnalyzer();
+                //if (interp != null) {
+                //    interp.RemoveReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
+                //}
                 return true;
             }
             return false;

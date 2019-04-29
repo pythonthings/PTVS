@@ -331,10 +331,6 @@
     <Compile Include="PythonTools\Editor\ReplPromptHelpers.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Logging\ActivityLogLogger.cs" />
-    <None Include="PythonTools\Navigation\Navigable\NavigableSymbol.cs" />
-    <None Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />
-    <None Include="PythonTools\Navigation\Navigable\NavigableSymbolSource.cs" />
-    <None Include="PythonTools\Navigation\Peek\PythonPeekResultSource.cs" />
     <Compile Include="PythonTools\Options\CodeFormattingCategory.cs" />
     <Compile Include="PythonTools\Options\DiagnosticsOptions.cs" />
     <Compile Include="PythonTools\Options\LanguageServerOptions.cs" />
@@ -356,9 +352,6 @@
     <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <None Include="PythonTools\Navigation\Peek\PythonPeekableItem.cs" />
-    <None Include="PythonTools\Navigation\Peek\PythonPeekableItemSource.cs" />
-    <None Include="PythonTools\Navigation\Peek\PythonPeekableItemSourceProvider.cs" />
     <Compile Include="PythonTools\Environments\AddEnvironmentDialog.xaml.cs">
       <DependentUpon>AddEnvironmentDialog.xaml</DependentUpon>
     </Compile>
@@ -431,10 +424,6 @@
     <Compile Include="PythonTools\Commands\OpenInterpreterListCommand.cs" />
     <Compile Include="PythonTools\InterpreterList\InterpreterListToolWindow.cs" />
     <Compile Include="PythonTools\Environments\InterpreterView.cs" />
-    <None Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplay.cs" />
-    <None Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplayFactory.cs" />
-    <None Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemProviderFactory.cs" />
-    <None Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemProvider.cs" />
     <Compile Include="PythonTools\Options\InterpreterPlaceholder.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -493,7 +482,6 @@
     <Compile Include="PythonTools\Commands\FillParagraphCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenReplCommand.cs" />
     <Compile Include="PythonTools\Commands\SendToReplCommand.cs" />
-    <None Include="PythonTools\Navigation\TextViewFilter.cs" />
     <Compile Include="PythonTools\Options\PythonFormattingWrappingOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -550,10 +538,6 @@
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluatorProvider.cs" />
     <Compile Include="PythonTools\IVsPython.cs" />
-    <None Include="PythonTools\Navigation\PythonFileLibraryNode.cs" />
-    <None Include="PythonTools\Navigation\WaitForCompleteAnalysisDialog.xaml.cs">
-      <DependentUpon>WaitForCompleteAnalysisDialog.xaml</DependentUpon>
-    </None>
     <Compile Include="PythonTools\Project\DefaultLauncherProvider.cs" />
     <Compile Include="PythonTools\Project\DefaultPythonLauncherOptions.cs">
       <SubType>UserControl</SubType>
@@ -636,13 +620,7 @@
     <Compile Include="PythonTools\Repl\ReplIntellisenseMode.cs" />
     <Compile Include="PythonTools\Repl\SwitchModuleCommand.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeReader.cs" />
-    <None Include="PythonTools\Navigation\CodeWindowManager.cs" />
-    <None Include="PythonTools\Navigation\DropDownBarClient.cs" />
-    <None Include="PythonTools\Navigation\EditFilter.cs" />
     <Compile Include="PythonConstants.cs" />
-    <None Include="PythonTools\Navigation\PythonLibraryManager.cs" />
-    <None Include="PythonTools\Navigation\PythonLibraryNode.cs" />
-    <None Include="PythonTools\Navigation\PythonLanguageInfo.cs" />
     <Compile Include="PythonTools\Project\PythonEditorFactory.cs" />
     <Compile Include="PythonTools\Project\PythonFileNode.cs" />
     <Compile Include="PythonTools\Project\PythonGeneralPropertyPage.cs" />
@@ -1038,12 +1016,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <None Include="PythonTools\Navigation\WaitForCompleteAnalysisDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </None>
     <Page Include="images\images.xaml">
       <SubType>Designer</SubType>
     </Page>

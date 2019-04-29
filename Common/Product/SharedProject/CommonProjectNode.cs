@@ -1189,9 +1189,12 @@ namespace Microsoft.VisualStudioTools.Project {
                 _projectDocListenerForStartupFileUpdates.Dispose();
                 _projectDocListenerForStartupFileUpdates = null;
             }
-            LibraryManager libraryManager = Site.GetService(GetLibraryManagerType()) as LibraryManager;
-            if (null != libraryManager) {
-                libraryManager.UnregisterHierarchy(InteropSafeHierarchy);
+            var libraryManagerType = GetLibraryManagerType();
+            if (libraryManagerType != null) {
+                var libraryManager = Site.GetService(libraryManagerType) as LibraryManager;
+                if (null != libraryManager) {
+                    libraryManager.UnregisterHierarchy(InteropSafeHierarchy);
+                }
             }
             if (_watcher != null) {
                 _watcher.EnableRaisingEvents = false;

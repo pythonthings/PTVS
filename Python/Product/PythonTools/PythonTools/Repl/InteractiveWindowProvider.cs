@@ -288,7 +288,8 @@ namespace Microsoft.PythonTools.Repl {
             if (toolWindow != null) {
                 toolWindow.BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
             }
-            replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
+            // LSC
+            //replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
 
             var selectEval = evaluator as SelectableReplEvaluator;
             if (selectEval != null) {

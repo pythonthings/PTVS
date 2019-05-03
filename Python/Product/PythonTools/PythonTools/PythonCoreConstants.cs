@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools {
@@ -25,7 +25,14 @@ namespace Microsoft.PythonTools {
 
         public const string LoggingRegistrySubkey = "Software\\Microsoft\\" + BaseRegistryKey + "\\Logging";
 
-        [Export, Name(ContentType), BaseDefinition("code")]
+        [Export]
+        [Name(ContentType)]
+        [BaseDefinition(CodeRemoteContentDefinition.CodeRemoteContentTypeName)]
         internal static ContentTypeDefinition ContentTypeDefinition = null;
+
+        [Export]
+        [FileExtension(".py")]
+        [ContentType(ContentType)]
+        internal static FileExtensionToContentTypeDefinition FileExtensionDefinition { get; set; }
     }
 }

@@ -255,6 +255,9 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Client" />
+    <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol" />
+    <Reference Include="StreamJsonRpc" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonTools\Debugger\CustomDebugAdapterProtocolExtension.cs" />
@@ -356,6 +359,11 @@
       <DependentUpon>AddEnvironmentDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientInitializationOptions.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClient.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientCustomTarget.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientMiddleLayer.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientStartInfo.cs" />
     <Compile Include="PythonTools\WorkspaceInfoBarManager.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialog.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialogHeaderControl.xaml.cs">
@@ -656,6 +664,7 @@
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
     <Content Include="images\AddPackage_16x.png" />
     <Content Include="images\AddPackage_16x.svg" />
+    <Content Include="PythonTools\LanguageServerClient\NOTES.txt" />
     <Content Include="Theme\Microsoft.PythonTools.theme.v16.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v15.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v16.0.pkgdef" />

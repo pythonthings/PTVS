@@ -924,6 +924,19 @@
       <SubType>Designer</SubType>
     </VSCTCompile>
   </ItemGroup>
+  <Target Name="_IncludeLanguageServer" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
+    <ItemGroup>
+      <LanguageServerFiles Include="$(BuildRoot)packages\LanguageServer\**\*" />
+      <LanguageServerFiles>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>LanguageServer\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <VSIXSubPath>LanguageServer\%(RecursiveDir)</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </LanguageServerFiles>
+      <Content Include="@(LanguageServerFiles)" />
+      <FileWrites Include="@(LanguageServerFiles)" />
+    </ItemGroup>
+  </Target>
   <ItemGroup>
     <Content Include="ptvsd_launcher.py">
       <IncludeInVSIX>true</IncludeInVSIX>

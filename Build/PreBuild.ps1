@@ -56,7 +56,16 @@ try {
         Write-Host "Creating symlink for $_.$($versions[$_])"
         New-Item -ItemType Junction "$outdir\$_" -Value "$outdir\$_.$($versions[$_])"
     } | Out-Null
-    
+
+    # Download language server from CDN - it's not available in a NuGet feed yet
+    $container = "python-language-server-daily"
+    $ver = "0.2.71"
+    @("x86", "x64") | %{
+        $filename = "Python-Language-Server-win-$_.$ver"
+        Invoke-WebRequest "https://pvsc.azureedge.net/$container/$filename.nupkg" -OutFile "$outdir\$filename.zip"
+        Expand-Archive "$outdir\$filename.zip" -DestinationPath "$outdir\LanguageServer\$_"
+    }
+
 } finally {
     popd
 }

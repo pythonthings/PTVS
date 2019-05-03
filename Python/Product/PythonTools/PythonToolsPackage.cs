@@ -172,10 +172,11 @@ namespace Microsoft.PythonTools {
     #endregion
     [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue = "#4000")]
     [ProvideToolWindow(typeof(InterpreterListToolWindow), Style = VsDockStyle.Linked, Window = ToolWindowGuids80.SolutionExplorer)]
-    [ProvideDiffSupportedContentType(PythonConstants.SourceFileExtensions, "")]
-    [ProvidePeekSupportedContentType(PythonConstants.SourceFileExtensions, "")]
-    [ProvideCodeExpansions(GuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
-    [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
+    // LSC
+    //[ProvideDiffSupportedContentType(PythonConstants.SourceFileExtensions, "")]
+    //[ProvidePeekSupportedContentType(PythonConstants.SourceFileExtensions, "")]
+    //[ProvideCodeExpansions(GuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
+    //[ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
     [ProvideInteractiveWindow(GuidList.guidPythonInteractiveWindow, Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow)]
     [ProvideBraceCompletion(PythonCoreConstants.ContentType)]
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",

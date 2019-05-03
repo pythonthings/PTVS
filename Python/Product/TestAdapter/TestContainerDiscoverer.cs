@@ -157,7 +157,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             private readonly TestContainerDiscoverer _discoverer;
             private readonly Dictionary<string, TestContainer> _containers;
             private readonly object _containersLock = new object();
-            private ProjectAnalyzer _analyzer;
+            // LSC
+            //private ProjectAnalyzer _analyzer;
 
             private List<string> _pendingRequests;
 
@@ -169,14 +170,14 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 // LSC
                 //project.ProjectAnalyzerChanged += ProjectAnalyzerChanged;
-                RegisterWithAnalyzerAsync().HandleAllExceptions(_discoverer._serviceProvider, GetType()).DoNotWait();
+                //RegisterWithAnalyzerAsync().HandleAllExceptions(_discoverer._serviceProvider, GetType()).DoNotWait();
             }
 
             public void Dispose() {
-                if (_analyzer != null) {
-                    _analyzer.AnalysisComplete -= AnalysisComplete;
-                }
                 // LSC
+                //if (_analyzer != null) {
+                //    _analyzer.AnalysisComplete -= AnalysisComplete;
+                //}
                 //_project.ProjectAnalyzerChanged -= ProjectAnalyzerChanged;
             }
 
@@ -198,97 +199,98 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
             }
 
-            private async Task RegisterWithAnalyzerAsync() {
-                if (_analyzer != null) {
-                    _analyzer.AnalysisComplete -= AnalysisComplete;
-                }
-                // LSC
-                //_analyzer = await _project.GetAnalyzerAsync();
-                _analyzer = null;
-                if (_analyzer != null) {
-                    _analyzer.AnalysisComplete += AnalysisComplete;
-                    await _analyzer.RegisterExtensionAsync(typeof(TestAnalyzer)).ConfigureAwait(false);
-                    await UpdateTestCasesAsync(_analyzer, _analyzer.Files, false).ConfigureAwait(false);
-                }
-            }
+            // LSC
+            //private async Task RegisterWithAnalyzerAsync() {
+            //    if (_analyzer != null) {
+            //        _analyzer.AnalysisComplete -= AnalysisComplete;
+            //    }
+            //    // LSC
+            //    //_analyzer = await _project.GetAnalyzerAsync();
+            //    _analyzer = null;
+            //    if (_analyzer != null) {
+            //        _analyzer.AnalysisComplete += AnalysisComplete;
+            //        await _analyzer.RegisterExtensionAsync(typeof(TestAnalyzer)).ConfigureAwait(false);
+            //        await UpdateTestCasesAsync(_analyzer, _analyzer.Files, false).ConfigureAwait(false);
+            //    }
+            //}
 
-            private void AnalysisComplete(object sender, AnalysisCompleteEventArgs e) {
-                PendOrSubmitRequests((ProjectAnalyzer)sender, e.Path)
-                    .HandleAllExceptions(_discoverer._serviceProvider, GetType())
-                    .DoNotWait();
-            }
+            //private void AnalysisComplete(object sender, AnalysisCompleteEventArgs e) {
+            //    PendOrSubmitRequests((ProjectAnalyzer)sender, e.Path)
+            //        .HandleAllExceptions(_discoverer._serviceProvider, GetType())
+            //        .DoNotWait();
+            //}
 
-            private async Task PendOrSubmitRequests(ProjectAnalyzer analyzer, string path) {
-                List<string> pendingRequests;
-                int originalCount;
-                lock (_containersLock) {
-                    pendingRequests = _pendingRequests;
-                    _pendingRequests.Add(path);
-                    originalCount = _pendingRequests.Count;
+            //private async Task PendOrSubmitRequests(ProjectAnalyzer analyzer, string path) {
+            //    List<string> pendingRequests;
+            //    int originalCount;
+            //    lock (_containersLock) {
+            //        pendingRequests = _pendingRequests;
+            //        _pendingRequests.Add(path);
+            //        originalCount = _pendingRequests.Count;
 
-                    if (originalCount > 50) {
-                        _pendingRequests = new List<string>();
-                    }
-                }
+            //        if (originalCount > 50) {
+            //            _pendingRequests = new List<string>();
+            //        }
+            //    }
 
-                await Task.Delay(100).ConfigureAwait(false);
+            //    await Task.Delay(100).ConfigureAwait(false);
 
-                lock (_containersLock) {
-                    if (pendingRequests.Count != originalCount) {
-                        return;
-                    }
-                    if (_pendingRequests == pendingRequests) {
-                        _pendingRequests = new List<string>();
-                    }
-                }
+            //    lock (_containersLock) {
+            //        if (pendingRequests.Count != originalCount) {
+            //            return;
+            //        }
+            //        if (_pendingRequests == pendingRequests) {
+            //            _pendingRequests = new List<string>();
+            //        }
+            //    }
 
-                await UpdateTestCasesAsync(analyzer, pendingRequests, true).ConfigureAwait(false);
-            }
+            //    await UpdateTestCasesAsync(analyzer, pendingRequests, true).ConfigureAwait(false);
+            //}
 
-            private async Task UpdateTestCasesAsync(ProjectAnalyzer analyzer, IEnumerable<string> paths, bool notify) {
-                var testCaseData = await analyzer.SendExtensionCommandAsync(
-                    TestAnalyzer.Name,
-                    TestAnalyzer.GetTestCasesCommand,
-                    string.Join(";", paths.Select(PathUtils.NormalizePath).Distinct(StringComparer.OrdinalIgnoreCase))
-                );
+            //private async Task UpdateTestCasesAsync(ProjectAnalyzer analyzer, IEnumerable<string> paths, bool notify) {
+            //    var testCaseData = await analyzer.SendExtensionCommandAsync(
+            //        TestAnalyzer.Name,
+            //        TestAnalyzer.GetTestCasesCommand,
+            //        string.Join(";", paths.Select(PathUtils.NormalizePath).Distinct(StringComparer.OrdinalIgnoreCase))
+            //    );
 
-                if (testCaseData == null) {
-                    return;
-                }
+            //    if (testCaseData == null) {
+            //        return;
+            //    }
 
-                var testCaseGroups = TestAnalyzer.GetTestCases(testCaseData).GroupBy(tc => tc.Filename);
+            //    var testCaseGroups = TestAnalyzer.GetTestCases(testCaseData).GroupBy(tc => tc.Filename);
 
-                bool anythingToNotify = false;
+            //    bool anythingToNotify = false;
 
-                foreach (var testCases in testCaseGroups) {
-                    var path = testCases.Key;
-                    if (testCases.Any()) {
-                        if (!TryGetContainer(path, out TestContainer existing) || !existing.TestCases.SequenceEqual(testCases)) {
-                            // we have a new entry or some of the tests changed
-                            int version = (existing?.Version ?? 0) + 1;
-                            lock (_containersLock) {
-                                _containers[path] = new TestContainer(
-                                    _discoverer,
-                                    path,
-                                    _project,
-                                    version,
-                                    Architecture,
-                                    testCases.ToArray()
-                                );
-                            }
+            //    foreach (var testCases in testCaseGroups) {
+            //        var path = testCases.Key;
+            //        if (testCases.Any()) {
+            //            if (!TryGetContainer(path, out TestContainer existing) || !existing.TestCases.SequenceEqual(testCases)) {
+            //                // we have a new entry or some of the tests changed
+            //                int version = (existing?.Version ?? 0) + 1;
+            //                lock (_containersLock) {
+            //                    _containers[path] = new TestContainer(
+            //                        _discoverer,
+            //                        path,
+            //                        _project,
+            //                        version,
+            //                        Architecture,
+            //                        testCases.ToArray()
+            //                    );
+            //                }
 
-                            anythingToNotify = true;
-                        }
-                    } else if (RemoveContainer(path)) {
-                        // Raise containers changed event...
-                        anythingToNotify = true;
-                    }
-                }
+            //                anythingToNotify = true;
+            //            }
+            //        } else if (RemoveContainer(path)) {
+            //            // Raise containers changed event...
+            //            anythingToNotify = true;
+            //        }
+            //    }
 
-                if (notify && anythingToNotify) {
-                    ContainersChanged();
-                }
-            }
+            //    if (notify && anythingToNotify) {
+            //        ContainersChanged();
+            //    }
+            //}
 
             private Architecture Architecture => Architecture.Default;
 
@@ -296,9 +298,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _discoverer.TestContainersUpdated?.Invoke(_discoverer, EventArgs.Empty);
             }
 
-            public void ProjectAnalyzerChanged(object sender, EventArgs e) {
-                RegisterWithAnalyzerAsync().HandleAllExceptions(_discoverer._serviceProvider, GetType()).DoNotWait();
-            }
+            // LSC
+            //public void ProjectAnalyzerChanged(object sender, EventArgs e) {
+            //    RegisterWithAnalyzerAsync().HandleAllExceptions(_discoverer._serviceProvider, GetType()).DoNotWait();
+            //}
         }
     }
 }

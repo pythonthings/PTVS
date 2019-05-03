@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis; // OK: ModulePath
 
 namespace Microsoft.PythonTools.BuildTasks {
     /// <summary>

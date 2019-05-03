@@ -20,7 +20,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis {
+namespace Microsoft.PythonTools.Debugger {
     /// <summary>
     /// Computes the fully qualified function name, including name of the enclosing class for methods,
     /// and, recursively, names of any outer functions.

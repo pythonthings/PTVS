@@ -22,7 +22,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis; // OK: ModulePath, SMALL CHANGE: PythonLibraryPath
 using Microsoft.PythonTools.Infrastructure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

@@ -58,7 +58,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestAnalysisExtension.cs" />
     <Compile Include="TestCaseInfo.cs" />
-    <Compile Include="TestMethodWalker.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

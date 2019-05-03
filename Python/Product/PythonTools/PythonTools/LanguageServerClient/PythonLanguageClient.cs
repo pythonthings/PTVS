@@ -113,6 +113,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var workspace = _workspaceService.CurrentWorkspace;
             var workspaceFolder = workspace.Location;
 
+            // Force initialization of python tools service by requesting it
+            _site.GetPythonToolsService();
+
             string interpreterPath = string.Empty;
             string interpreterVersion = string.Empty;
             var factory = workspace.GetInterpreterFactory(_registryService, _optionsService);

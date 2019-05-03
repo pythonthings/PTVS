@@ -28,7 +28,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Build.Execution;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis; // OK: ModulePath
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Environments;

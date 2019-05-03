@@ -26,7 +26,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis; // OK: ModulePath
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Debugger;

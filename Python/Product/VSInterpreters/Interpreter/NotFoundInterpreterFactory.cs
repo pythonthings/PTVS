@@ -16,9 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis; // BAD: IPythonInterpreter, PythonAnalyzer
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {

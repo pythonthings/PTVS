@@ -17,7 +17,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis; // OK: ModulePath
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 

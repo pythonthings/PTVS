@@ -31,7 +31,7 @@ using System.Windows.Controls;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis; // BAD: ParameterResult
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;

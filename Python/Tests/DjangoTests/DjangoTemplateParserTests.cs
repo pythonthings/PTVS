@@ -785,7 +785,9 @@ namespace DjangoTests {
             _variables = variables;
             _filters = new Dictionary<string, TagInfo>();
             foreach (var filter in filters) {
-                _filters[filter] = new TagInfo("", null);
+                // LSC
+                //_filters[filter] = new TagInfo("", null);
+                _filters[filter] = new TagInfo("");
             }
         }
 

@@ -9,8 +9,7 @@ $need_symlink = @(
     "MicroBuild.Core",
     "Microsoft.VSSDK.BuildTools",
     "Microsoft.VSSDK.Debugger.VSDConfigTool",
-    "Newtonsoft.Json",
-    "Microsoft.VisualStudio.Python.LanguageServer"
+    "Newtonsoft.Json"
 )
 
 if (-not $vstarget) {
@@ -58,13 +57,14 @@ try {
         New-Item -ItemType Junction "$outdir\$_" -Value "$outdir\$_.$($versions[$_])"
     } | Out-Null
 
-    # Download language server from CDN - it's not available in a NuGet feed yet
+    "Downloading language server from CDN"
     $container = "python-language-server-daily"
     $ver = "0.2.82"
     @("x86", "x64") | %{
         $filename = "Python-Language-Server-win-$_.$ver"
         Invoke-WebRequest "https://pvsc.azureedge.net/$container/$filename.nupkg" -OutFile "$outdir\$filename.zip"
         Expand-Archive "$outdir\$filename.zip" -DestinationPath "$outdir\LanguageServer\$_"
+        Write-Host "Expanded $filename"
     }
 
 } finally {

@@ -52,7 +52,6 @@
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ProjectReference>
@@ -86,6 +85,10 @@
     <ProjectReference Include="..\EnvironmentsList\EnvironmentsList.csproj">
       <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>
       <Name>Microsoft.PythonTools.EnvironmentsList</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Ipc.Json\Ipc.Json.csproj">
+      <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
+      <Name>Ipc.Json</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProjectWizards\ProjectWizards.csproj">
       <Project>{3814d9db-10e6-4478-bd98-6c5840612af8}</Project>
@@ -157,9 +160,9 @@
       <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll;VSCodeInterop.pkgdef" Condition="@(_InteropDll) == ''" />
     </ItemGroup>
   </Target>
-  <Target Name="_IncludeLanguageServer" BeforeTargets="AssignTargetPaths">
+  <!--<Target Name="_IncludeLanguageServer" BeforeTargets="AssignTargetPaths">
     <ItemGroup>
-      <LanguageServerFiles Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\**\*" />
+      <LanguageServerFiles Include="$(PackagesPath)\LanguageServer\x86\**\*" />
       <LanguageServerFiles>
         <IncludeInVSIX>true</IncludeInVSIX>
         <Link>\%(RecursiveDir)\%(Filename)%(Extension)</Link>
@@ -169,5 +172,5 @@
       <Content Include="@(LanguageServerFiles)" />
       <FileWrites Include="@(LanguageServerFiles)" />
     </ItemGroup>
-  </Target>
+  </Target>-->
 </Project>

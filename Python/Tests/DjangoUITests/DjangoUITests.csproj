@@ -52,7 +52,6 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
       <HintPath>$(CommonProgramFiles)\Microsoft Shared\MSEnv\PublicAssemblies\envdte.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
@@ -95,6 +94,12 @@
     <Reference Include="Microsoft.WebTools.Languages.Html.dll" Condition=" '$(VSTarget)' == '16.0' " />
     <Reference Include="Microsoft.WebTools.Languages.Html.Editor.dll" Condition=" '$(VSTarget)' == '16.0' " />
     <Reference Include="Microsoft.WebTools.Languages.Html.VS.dll" Condition=" '$(VSTarget)' == '16.0' " />
+    <Reference Include="Microsoft.Python.Analysis.Core">
+      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Analysis.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Python.Parsing">
+      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Parsing.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DjangoAzureProjectUITests.cs" />

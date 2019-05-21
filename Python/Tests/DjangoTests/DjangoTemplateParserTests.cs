@@ -21,11 +21,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Django.Analysis;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks;
 using Microsoft.PythonTools.Django.TemplateParsing;
+using Microsoft.Python.Analysis.Types;
 
 namespace DjangoTests {
     [TestClass]

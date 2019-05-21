@@ -83,7 +83,12 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>Microsoft.Dia.Interop.15.0.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
+    <Reference Include="Microsoft.Python.Core">
+      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Python.Parsing">
+      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Parsing.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Debugger\Guids.cs">

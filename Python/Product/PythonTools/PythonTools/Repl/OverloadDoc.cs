@@ -14,7 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Analysis; // BAD: ParameterResult
+using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Repl {
     class OverloadDoc {

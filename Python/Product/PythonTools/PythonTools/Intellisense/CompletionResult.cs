@@ -15,13 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Interpreter;
+using Microsoft.Python.Analysis.Types;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using AP = AnalysisProtocol;
-
     sealed class CompletionResult {
-        private readonly AP.CompletionValue[] _values;
+        // LSC
+        //private readonly AP.CompletionValue[] _values;
 
         internal CompletionResult(string name, PythonMemberType memberType) {
             MergeKey = name ?? throw new ArgumentNullException(nameof(name));
@@ -30,14 +29,23 @@ namespace Microsoft.PythonTools.Intellisense {
             MemberType = memberType;
         }
 
-        internal CompletionResult(string mergeKey, string name, string completion, string doc, PythonMemberType memberType, AP.CompletionValue[] values) {
+        // LSC
+        internal CompletionResult(string mergeKey, string name, string completion, string doc, PythonMemberType memberType) {
             MergeKey = mergeKey ?? throw new ArgumentNullException(nameof(mergeKey));
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Completion = completion ?? throw new ArgumentNullException(nameof(completion));
             MemberType = memberType;
             Documentation = doc;
-            _values = values;
         }
+
+        //internal CompletionResult(string mergeKey, string name, string completion, string doc, PythonMemberType memberType, AP.CompletionValue[] values) {
+        //    MergeKey = mergeKey ?? throw new ArgumentNullException(nameof(mergeKey));
+        //    Name = name ?? throw new ArgumentNullException(nameof(name));
+        //    Completion = completion ?? throw new ArgumentNullException(nameof(completion));
+        //    MemberType = memberType;
+        //    Documentation = doc;
+        //    _values = values;
+        //}
 
         public string Completion { get; }
         public string Documentation { get; }
@@ -48,6 +56,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public string MergeKey { get; }
 
-        internal AP.CompletionValue[] Values => _values ?? Array.Empty<AP.CompletionValue>();
+        // LSC
+        //internal AP.CompletionValue[] Values => _values ?? Array.Empty<AP.CompletionValue>();
     }
 }

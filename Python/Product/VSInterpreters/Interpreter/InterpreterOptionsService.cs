@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.Python.Analysis.Core.Interpreter;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {

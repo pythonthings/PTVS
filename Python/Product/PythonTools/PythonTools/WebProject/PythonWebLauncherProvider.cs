@@ -17,7 +17,7 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Analysis; // OK: ModulePath
+using Microsoft.Python.Analysis.Core.Interpreter;
 using Microsoft.PythonTools.BuildTasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;

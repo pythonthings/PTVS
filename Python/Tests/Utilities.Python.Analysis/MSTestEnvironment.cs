@@ -15,14 +15,14 @@
 // permissions and limitations under the License.
 
 using Common = Microsoft.PythonTools.Infrastructure;
-using Analysis = Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace TestUtilities.Python {
-    public sealed class MSTestEnvironment : TestEnvironmentImpl, Common.ITestEnvironment, Analysis.ITestEnvironment {
+    public sealed class MSTestEnvironment : TestEnvironmentImpl, Common.ITestEnvironment /*, Analysis.ITestEnvironment*/ {
         public static TestEnvironmentImpl Initialize() {
             var instance = new MSTestEnvironment();
             Instance = instance;
-            Analysis.TestEnvironment.Current = instance;
+            // LSC
+            //Analysis.TestEnvironment.Current = instance;
             Common.TestEnvironment.Current = instance;
             return instance;
         }

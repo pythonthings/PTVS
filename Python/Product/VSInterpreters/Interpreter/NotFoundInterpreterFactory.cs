@@ -16,19 +16,23 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis; // BAD: IPythonInterpreter, PythonAnalyzer
+using Microsoft.Python.Analysis;
+using Microsoft.Python.Analysis.Core.Interpreter;
+using Microsoft.Python.Analysis.Types;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
-    sealed class NotFoundInterpreter : IPythonInterpreter {
-        public void Dispose() { }
-        public void Initialize(PythonAnalyzer state) { }
-        public IPythonType GetBuiltinType(BuiltinTypeId id) { throw new KeyNotFoundException(); }
-        public IList<string> GetModuleNames() { return new string[0]; }
-        public event EventHandler ModuleNamesChanged { add { } remove { } }
-        public IPythonModule ImportModule(string name) { return null; }
-        public IModuleContext CreateModuleContext() { return null; }
-    }
+    // LSC
+    //sealed class NotFoundInterpreter : IPythonInterpreter {
+    //    public void Dispose() { }
+    //    // LSC
+    //    //public void Initialize(PythonAnalyzer state) { }
+    //    public IPythonType GetBuiltinType(BuiltinTypeId id) { throw new KeyNotFoundException(); }
+    //    public IList<string> GetModuleNames() { return new string[0]; }
+    //    public event EventHandler ModuleNamesChanged { add { } remove { } }
+    //    public IPythonModule ImportModule(string name) { return null; }
+    //    //public IModuleContext CreateModuleContext() { return null; }
+    //}
 
     sealed public class NotFoundInterpreterFactory : IPythonInterpreterFactory {
         public NotFoundInterpreterFactory(
@@ -57,7 +61,9 @@ namespace Microsoft.PythonTools.Interpreter {
         public void NotifyImportNamesChanged() { }
 
         public IPythonInterpreter CreateInterpreter() {
-            return new NotFoundInterpreter();
+            return null;
+            // LSC
+            //return new NotFoundInterpreter();
         }
     }
 }

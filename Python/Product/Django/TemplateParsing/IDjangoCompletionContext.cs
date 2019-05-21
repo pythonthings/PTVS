@@ -15,8 +15,8 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using Microsoft.Python.Analysis.Types;
 using Microsoft.PythonTools.Django.Analysis;
-using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>

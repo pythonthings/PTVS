@@ -34,8 +34,8 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.Python.Parsing;
+using Microsoft.Python.Parsing.Ast;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
@@ -55,6 +55,7 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
+using Microsoft.Python.Analysis.Types;
 
 namespace Microsoft.PythonTools {
     static class Extensions {
@@ -77,21 +78,22 @@ namespace Microsoft.PythonTools {
             StandardGlyphGroup group;
             switch (objectType) {
                 case PythonMemberType.Class: group = StandardGlyphGroup.GlyphGroupClass; break;
-                case PythonMemberType.DelegateInstance:
-                case PythonMemberType.Delegate: group = StandardGlyphGroup.GlyphGroupDelegate; break;
-                case PythonMemberType.Enum: group = StandardGlyphGroup.GlyphGroupEnum; break;
-                case PythonMemberType.Namespace: group = StandardGlyphGroup.GlyphGroupNamespace; break;
-                case PythonMemberType.Multiple: group = StandardGlyphGroup.GlyphGroupOverload; break;
-                case PythonMemberType.Field: group = StandardGlyphGroup.GlyphGroupField; break;
+                    // LSC
+                //case PythonMemberType.DelegateInstance:
+                //case PythonMemberType.Delegate: group = StandardGlyphGroup.GlyphGroupDelegate; break;
+                //case PythonMemberType.Enum: group = StandardGlyphGroup.GlyphGroupEnum; break;
+                //case PythonMemberType.Namespace: group = StandardGlyphGroup.GlyphGroupNamespace; break;
+                //case PythonMemberType.Multiple: group = StandardGlyphGroup.GlyphGroupOverload; break;
+                //case PythonMemberType.Field: group = StandardGlyphGroup.GlyphGroupField; break;
                 case PythonMemberType.Module: group = StandardGlyphGroup.GlyphGroupModule; break;
                 case PythonMemberType.Property: group = StandardGlyphGroup.GlyphGroupProperty; break;
                 case PythonMemberType.Instance: group = StandardGlyphGroup.GlyphGroupVariable; break;
-                case PythonMemberType.Constant: group = StandardGlyphGroup.GlyphGroupVariable; break;
-                case PythonMemberType.EnumInstance: group = StandardGlyphGroup.GlyphGroupEnumMember; break;
-                case PythonMemberType.Event: group = StandardGlyphGroup.GlyphGroupEvent; break;
-                case PythonMemberType.Keyword: group = StandardGlyphGroup.GlyphKeyword; break;
-                case PythonMemberType.CodeSnippet: group = StandardGlyphGroup.GlyphCSharpExpansion; break;
-                case PythonMemberType.NamedArgument: group = StandardGlyphGroup.GlyphGroupMapItem; break;
+                //case PythonMemberType.Constant: group = StandardGlyphGroup.GlyphGroupVariable; break;
+                //case PythonMemberType.EnumInstance: group = StandardGlyphGroup.GlyphGroupEnumMember; break;
+                //case PythonMemberType.Event: group = StandardGlyphGroup.GlyphGroupEvent; break;
+                //case PythonMemberType.Keyword: group = StandardGlyphGroup.GlyphKeyword; break;
+                //case PythonMemberType.CodeSnippet: group = StandardGlyphGroup.GlyphCSharpExpansion; break;
+                //case PythonMemberType.NamedArgument: group = StandardGlyphGroup.GlyphGroupMapItem; break;
                 case PythonMemberType.Function:
                 case PythonMemberType.Method:
                 default:
@@ -957,6 +959,18 @@ namespace Microsoft.PythonTools {
 
         internal static int GetStartIncludingIndentation(this Node self, PythonAst ast) {
             return self.StartIndex - (self.GetIndentationLevel(ast) ?? "").Length;
+        }
+
+        internal static string GetIndentationLevel(this Node self, PythonAst ast) {
+            var leading = self.GetLeadingWhiteSpace(ast);
+            // we only want the trailing leading space for the current line...
+            for (int i = leading.Length - 1; i >= 0; i--) {
+                if (leading[i] == '\r' || leading[i] == '\n') {
+                    leading = leading.Substring(i + 1);
+                    break;
+                }
+            }
+            return leading;
         }
 
         internal static bool IsIronPython(this InterpreterConfiguration config) {

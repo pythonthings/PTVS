@@ -1,4 +1,3 @@
-extern alias analysis;
 // Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
@@ -19,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using analysis::Microsoft.PythonTools.Parsing;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;

@@ -17,7 +17,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis; // OK: ModulePath
+using Microsoft.Python.Analysis.Core.Interpreter;
 
 namespace Microsoft.PythonTools.Interpreter {
     public static class PackageManagerFactoryExtensions {

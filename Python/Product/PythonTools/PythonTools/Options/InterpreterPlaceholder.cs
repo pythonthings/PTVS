@@ -15,6 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.Python.Analysis;
+using Microsoft.Python.Analysis.Core.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Options {
@@ -30,11 +32,11 @@ namespace Microsoft.PythonTools.Options {
                 null,
                 InterpreterArchitecture.Unknown,
                 new Version(),
-                InterpreterUIMode.Normal
+                Interpreter.InterpreterUIMode.Normal
             );
         }
         
-        public InterpreterConfiguration Configuration { get; private set; }
+        public Interpreter.InterpreterConfiguration Configuration { get; private set; }
 
         public Guid Id => Guid.Empty;
 

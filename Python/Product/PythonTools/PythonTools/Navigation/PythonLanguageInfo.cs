@@ -27,6 +27,8 @@ using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools.Project;
 
+// LSC: PythonLanguageInfo is needed for the legacy debugger and for the text editor/python options pages
+
 namespace Microsoft.PythonTools.Navigation {
     /// <summary>
     /// Minimal language service.  Implemented directly rather than using the Managed Package
@@ -44,9 +46,12 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public int GetCodeWindowManager(IVsCodeWindow pCodeWin, out IVsCodeWindowManager ppCodeWinMgr) {
-            var ptvsService = _serviceProvider.GetPythonToolsService();
-            ppCodeWinMgr = ptvsService.GetOrCreateCodeWindowManager(pCodeWin);
-            return VSConstants.S_OK;
+            ppCodeWinMgr = null;
+            return VSConstants.E_FAIL;
+            // LSC
+            //var ptvsService = _serviceProvider.GetPythonToolsService();
+            //ppCodeWinMgr = ptvsService.GetOrCreateCodeWindowManager(pCodeWin);
+            //return VSConstants.S_OK;
         }
 
         public int GetFileExtensions(out string pbstrExtensions) {
@@ -90,19 +95,20 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public int GetNameOfLocation(IVsTextBuffer pBuffer, int iLine, int iCol, out string pbstrName, out int piLineOffset) {
-            var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-            var service = model.GetService<IVsEditorAdaptersFactoryService>();
-            var buffer = service.GetDataBuffer(pBuffer);
-            var entry = buffer.TryGetAnalysisEntry();
-            if (entry != null) {
-                var location = entry.Analyzer.WaitForRequest(entry.Analyzer.GetNameOfLocationAsync(entry, buffer, iLine, iCol), "PythonLanguageInfo.GetNameOfLocation");
-                if (location != null) {
-                    pbstrName = location.name;
-                    piLineOffset = location.lineOffset;
+            // LSC
+            //var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+            //var service = model.GetService<IVsEditorAdaptersFactoryService>();
+            //var buffer = service.GetDataBuffer(pBuffer);
+            //var entry = buffer.TryGetAnalysisEntry();
+            //if (entry != null) {
+            //    var location = entry.Analyzer.WaitForRequest(entry.Analyzer.GetNameOfLocationAsync(entry, buffer, iLine, iCol), "PythonLanguageInfo.GetNameOfLocation");
+            //    if (location != null) {
+            //        pbstrName = location.name;
+            //        piLineOffset = location.lineOffset;
 
-                    return VSConstants.S_OK;
-                }
-            }
+            //        return VSConstants.S_OK;
+            //    }
+            //}
 
             pbstrName = null;
             piLineOffset = 0;
@@ -117,16 +123,18 @@ namespace Microsoft.PythonTools.Navigation {
         /// but they actually specify the end of it (going <paramref name="cLines"/> lines back).
         /// </remarks>
         public int GetProximityExpressions(IVsTextBuffer pBuffer, int iLine, int iCol, int cLines, out IVsEnumBSTR ppEnum) {
-            var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-            var service = model.GetService<IVsEditorAdaptersFactoryService>();
-            var buffer = service.GetDataBuffer(pBuffer);
-            var entry = buffer.TryGetAnalysisEntry();
-            if (entry != null) {
-                var names = entry.Analyzer.WaitForRequest(entry.Analyzer.GetProximityExpressionsAsync(entry, buffer, iLine, iCol, cLines), "PythonLanguageInfo.GetProximityExpressions");
-                ppEnum = new EnumBSTR(names ?? Enumerable.Empty<string>());
-            } else {
-                ppEnum = new EnumBSTR(Enumerable.Empty<string>());
-            }
+            // LSC
+            //var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+            //var service = model.GetService<IVsEditorAdaptersFactoryService>();
+            //var buffer = service.GetDataBuffer(pBuffer);
+            //var entry = buffer.TryGetAnalysisEntry();
+            //if (entry != null) {
+            //    var names = entry.Analyzer.WaitForRequest(entry.Analyzer.GetProximityExpressionsAsync(entry, buffer, iLine, iCol, cLines), "PythonLanguageInfo.GetProximityExpressions");
+            //    ppEnum = new EnumBSTR(names ?? Enumerable.Empty<string>());
+            //} else {
+            //    ppEnum = new EnumBSTR(Enumerable.Empty<string>());
+            //}
+            ppEnum = new EnumBSTR(Enumerable.Empty<string>());
             return VSConstants.S_OK;
         }
 

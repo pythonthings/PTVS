@@ -15,6 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
+#if !NO_FACTORIES
+using Microsoft.Python.Analysis.Core.Interpreter;
+#endif
 
 namespace Microsoft.PythonTools.Interpreter {
     class PythonInterpreterInformation {

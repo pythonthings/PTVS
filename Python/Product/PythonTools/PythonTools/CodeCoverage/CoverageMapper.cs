@@ -16,11 +16,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Xml;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.Python.Analysis.Core.Interpreter;
+using Microsoft.Python.Core.Text;
+using Microsoft.Python.Parsing.Ast;
 
 namespace Microsoft.PythonTools.CodeCoverage {
     /// <summary>
@@ -62,7 +60,7 @@ namespace Microsoft.PythonTools.CodeCoverage {
 
         public string ModuleName {
             get {
-                return Analysis.ModulePath.FromFullPath(_filename).ModuleName;
+                return ModulePath.FromFullPath(_filename).ModuleName;
             }
         }
 
@@ -71,8 +69,8 @@ namespace Microsoft.PythonTools.CodeCoverage {
                 return false;
             }
 
-            var start = node.GetStart(_ast);
-            var end = node.GetEnd(_ast);
+            var start = node.GetStart();
+            var end = node.GetEnd();
             bool covered;
             bool multiline = false;
             if (start.Line != end.Line) {
@@ -409,12 +407,12 @@ namespace Microsoft.PythonTools.CodeCoverage {
             if (UpdateLineInfo(node, true)) {
                 // make sure we get the name marked as well if we have a multiline
                 // name expression...
-                var nameSpan = node.GetNameSpan(_ast);
+                var nameSpan = node.GetNameSpan();
                 MarkCoverage(
                     true, 
                     nameSpan.Start, 
                     nameSpan.End, 
-                    IsCovered(node.GetStart(_ast).Line)
+                    IsCovered(node.GetStart().Line)
                 );
                 return true;
             }

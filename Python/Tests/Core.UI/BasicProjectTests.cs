@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-extern alias analysis;
 extern alias pythontools;
 extern alias util;
 extern alias vsinterpreters;
@@ -30,8 +29,6 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Input;
-using analysis::Microsoft.PythonTools.Interpreter;
-using analysis::Microsoft.PythonTools.Parsing;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.PythonTools.Infrastructure;

@@ -52,7 +52,6 @@
       <HintPath>$(CommonProgramFiles)\Microsoft Shared\MSEnv\PublicAssemblies\envdte.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.PythonTools.Ipc.Json" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
@@ -101,6 +100,12 @@
     <Reference Include="UIAutomationClient" />
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
+    <Reference Include="Microsoft.Python.Analysis.Core">
+      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Analysis.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Python.Parsing">
+      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Parsing.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddEnvironmentDialogWrapperBase.cs" />

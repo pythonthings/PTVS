@@ -16,7 +16,7 @@
 
 using System;
 using System.Linq;
-using Microsoft.PythonTools.Analysis; // OK: ModulePath
+using Microsoft.Python.Analysis.Core.Interpreter;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudioTools;

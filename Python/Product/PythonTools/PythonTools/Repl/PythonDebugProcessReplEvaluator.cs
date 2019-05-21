@@ -22,6 +22,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Analysis.Types;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
@@ -300,7 +302,7 @@ namespace Microsoft.PythonTools.Repl {
                             var completionResults = result.StringRepr
                                 .Split(':')
                                 .Where(r => !string.IsNullOrEmpty(r))
-                                .Select(r => new CompletionResult(r, Interpreter.PythonMemberType.Field))
+                                .Select(r => new CompletionResult(r, PythonMemberType.Generic))
                                 .ToArray();
 
                             return completionResults;
@@ -415,7 +417,7 @@ namespace Microsoft.PythonTools.Repl {
         private void UpdateFrameLocals(PythonStackFrame frame) {
             _currentFrameLocals = frame.Locals.Union(frame.Parameters)
                 .Where(r => !string.IsNullOrEmpty(r.Expression))
-                .Select(r => new CompletionResult(r.Expression, Interpreter.PythonMemberType.Field))
+                .Select(r => new CompletionResult(r.Expression, PythonMemberType.Generic))
                 .ToArray();
         }
 

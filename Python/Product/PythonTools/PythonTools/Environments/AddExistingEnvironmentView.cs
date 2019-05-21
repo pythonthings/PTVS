@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.Python.Analysis.Core.Interpreter;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
@@ -344,7 +345,7 @@ namespace Microsoft.PythonTools.Environments {
                 !string.IsNullOrEmpty(VersionName);
         }
 
-        private void SetCustomVariables(InterpreterConfiguration config) {
+        private void SetCustomVariables(Interpreter.InterpreterConfiguration config) {
             Description = config.Description;
             InterpreterPath = config.InterpreterPath;
             WindowsInterpreterPath = config.GetWindowsInterpreterPath();

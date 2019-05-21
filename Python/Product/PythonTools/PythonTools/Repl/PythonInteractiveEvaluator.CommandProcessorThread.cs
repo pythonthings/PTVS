@@ -31,7 +31,7 @@ using System.Windows.Controls;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Microsoft.PythonTools.Analysis; // BAD: ParameterResult
+using Microsoft.Python.Analysis.Types;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -573,7 +573,6 @@ namespace Microsoft.PythonTools.Repl {
                                 // parameter as optional (for consistency with
                                 // signature help from the database)
                                 false,
-                                null,
                                 name.Substring(equals + 1)
                             );
                         }
@@ -820,8 +819,9 @@ namespace Microsoft.PythonTools.Repl {
                         return new CompletionResult(name, PythonMemberType.Method);
                     case "__builtin__.getset_descriptor":
                         return new CompletionResult(name, PythonMemberType.Property);
-                    case "__builtin__.namespace#":
-                        return new CompletionResult(name, PythonMemberType.Namespace);
+                        // LSC
+                    //case "__builtin__.namespace#":
+                    //    return new CompletionResult(name, PythonMemberType.Namespace);
                     case "__builtin__.type":
                         return new CompletionResult(name, PythonMemberType.Class);
                     case "__builtin__.function":
@@ -830,7 +830,8 @@ namespace Microsoft.PythonTools.Repl {
                         return new CompletionResult(name, PythonMemberType.Module);
                 }
 
-                return new CompletionResult(name, PythonMemberType.Field);
+                // LSC
+                return new CompletionResult(name, PythonMemberType.Generic);
             }
 
             public void SetScope(string scopeName) {

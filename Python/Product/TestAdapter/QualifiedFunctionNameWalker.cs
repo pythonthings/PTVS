@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.Python.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Debugger {
     /// <summary>
@@ -73,8 +73,8 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public override void PostWalk(FunctionDefinition node) {
-            int start = node.GetStart(_ast).Line;
-            int end = node.Body.GetEnd(_ast).Line + 1;
+            int start = node.GetStart().Line;
+            int end = node.Body.GetEnd().Line + 1;
             if (_lineNumber < start || _lineNumber >= end) {
                 return;
             }

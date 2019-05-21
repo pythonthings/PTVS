@@ -19,10 +19,9 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Threading;
+using Microsoft.Python.Analysis.Core.Interpreter;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
@@ -36,7 +35,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private bool _initialized;
         private IPythonInterpreterFactory _interpreter;
         private IPythonInterpreterFactory _interpreterX64;
-        private InterpreterConfiguration _config, _configX64;
+        private PythonTools.Interpreter.InterpreterConfiguration _config, _configX64;
         const string IronPythonCorePath = "Software\\IronPython";
 
         [ImportingConstructor]
@@ -130,7 +129,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+        public IEnumerable<PythonTools.Interpreter.InterpreterConfiguration> GetInterpreterConfigurations() {
             EnsureInitialized();
 
             if (_config != null) {
@@ -239,11 +238,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 "IRONPYTHONPATH",
                 arch,
                 new Version(2, 7),
-                InterpreterUIMode.SupportsDatabase
+                PythonTools.Interpreter.InterpreterUIMode.SupportsDatabase
             );
         }
 
-        internal static InterpreterFactoryCreationOptions GetCreationOptions(IServiceProvider site, InterpreterConfiguration config) {
+        internal static InterpreterFactoryCreationOptions GetCreationOptions(IServiceProvider site, PythonTools.Interpreter.InterpreterConfiguration config) {
             return new InterpreterFactoryCreationOptions {};
         }
     }

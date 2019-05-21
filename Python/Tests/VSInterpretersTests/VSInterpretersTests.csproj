@@ -52,7 +52,12 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.XML" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
+    <Reference Include="Microsoft.Python.Analysis.Core">
+      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Analysis.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Python.Parsing">
+      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Parsing.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PipRequirementsUtilsTests.cs" />

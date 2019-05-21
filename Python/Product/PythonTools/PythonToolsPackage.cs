@@ -26,7 +26,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
-using Microsoft.PythonTools.Analysis; // OK: ModulePath
+using Microsoft.Python.Analysis.Core.Interpreter;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Debugger;
@@ -38,6 +38,7 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Logging;
+using Microsoft.PythonTools.Navigation;
 // LSC
 //using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
@@ -90,7 +91,7 @@ namespace Microsoft.PythonTools {
     [ProvideOptionPage(typeof(PythonDebuggingOptionsPage), "Python Tools", "Debugging", 115, 125, true)]
     [ProvideOptionPage(typeof(PythonCondaOptionsPage), "Python Tools", "Conda", 115, 132, true)]
     [ProvideOptionPage(typeof(LanguageServerOptionsPage), "Python Tools", "Language Server", 115, 131, false)]
-    [Guid(GuidList.guidPythonToolsPkgString)]              // our packages GUID        
+    [Guid(GuidList.guidPythonToolsPkgString)]              // our packages GUID
     // LSC
     //[ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     //[ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
@@ -471,7 +472,7 @@ namespace Microsoft.PythonTools {
             AddService<IClipboardService>(new ClipboardService(), true);
             AddService<IPythonToolsToolWindowService>(this, true);
             // LSC
-            //AddService<PythonLanguageInfo>((container, serviceType) => new PythonLanguageInfo(this), promote: true);
+            AddService<PythonLanguageInfo>((container, serviceType) => new PythonLanguageInfo(this), promote: true);
             AddService<CustomDebuggerEventHandler>((container, serviceType) => new CustomDebuggerEventHandler(this), promote: true);
             AddService<IPythonToolsOptionsService>(PythonToolsOptionsService.CreateService, promote: true);
             AddService<IPythonToolsLogger>(PythonToolsLogger.CreateService, promote: true);

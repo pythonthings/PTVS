@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.Python.Analysis.Core.Interpreter;
 
 namespace Microsoft.PythonTools.Interpreter {
 

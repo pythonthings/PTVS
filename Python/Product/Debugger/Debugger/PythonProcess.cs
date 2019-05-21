@@ -22,10 +22,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Core.Text;
+using Microsoft.Python.Parsing;
+using Microsoft.Python.Parsing.Ast;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudioTools;
 using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
@@ -522,8 +523,8 @@ namespace Microsoft.PythonTools.Debugger {
             }
 
             foreach (var statement in walker.Statements) {
-                int start = statement.GetStart(ast).Line;
-                int end = statement.Body.GetEnd(ast).Line + 1;
+                int start = statement.GetStart().Line;
+                int end = statement.Body.GetEnd().Line + 1;
                 var expressions = new List<string>();
 
                 if (statement.Handlers == null) {

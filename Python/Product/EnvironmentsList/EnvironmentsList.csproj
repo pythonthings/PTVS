@@ -71,12 +71,13 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
-    <Reference Include="Microsoft.PythonTools.Analyzer" />
     <Reference Include="Microsoft.VisualStudio.Settings.15.0" />
     <Reference Include="Microsoft.VisualStudio.ImageCatalog" />
     <Reference Include="Microsoft.VisualStudio.Imaging" />
     <Reference Include="Microsoft.VisualStudio.Utilities" />
+    <Reference Include="Microsoft.Python.Analysis.Core">
+      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Analysis.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Page Include="images\images.xaml">

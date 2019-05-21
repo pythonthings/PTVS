@@ -51,7 +51,6 @@
     <Reference Include="IronPython" />
     <Reference Include="IronPython.Modules" />
     <Reference Include="IronPython.Wpf" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.Dynamic" />
     <Reference Include="Microsoft.Scripting" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
@@ -98,6 +97,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
+    <Reference Include="Microsoft.Python.Analysis.Core">
+      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Analysis.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IronPythonPipPackageManagerProvider.cs" />

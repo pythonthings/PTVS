@@ -28,7 +28,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Build.Execution;
-using Microsoft.PythonTools.Analysis; // OK: ModulePath
+using Microsoft.Python.Analysis.Core.Interpreter;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Environments;
@@ -349,7 +349,7 @@ namespace Microsoft.PythonTools.Project {
             InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void AddInterpreterDefinitionAndReference(InterpreterConfiguration config) {
+        public void AddInterpreterDefinitionAndReference(Interpreter.InterpreterConfiguration config) {
             lock (_validFactories) {
                 if (_validFactories.Contains(config.Id)) {
                     return;
@@ -490,7 +490,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal IEnumerable<InterpreterConfiguration> InterpreterConfigurations {
+        internal IEnumerable<Interpreter.InterpreterConfiguration> InterpreterConfigurations {
             get {
                 foreach (var config in _validFactories) {
                     var value = InterpreterRegistry.FindConfiguration(config);
@@ -1632,7 +1632,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal int OpenCommandPrompt(string path, InterpreterConfiguration interpreterConfig = null, string subtitle = null) {
+        internal int OpenCommandPrompt(string path, Interpreter.InterpreterConfiguration interpreterConfig = null, string subtitle = null) {
             var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"));
             psi.UseShellExecute = false;
             psi.WorkingDirectory = path;
@@ -1893,7 +1893,7 @@ namespace Microsoft.PythonTools.Project {
             string description;
             if (args != null && args.TryGetValue("e", out description) && !string.IsNullOrEmpty(description)) {
                 var service = Site.GetComponentModel().GetService<IInterpreterRegistryService>();
-                InterpreterConfiguration config;
+                Interpreter.InterpreterConfiguration config;
 
                 config = InterpreterConfigurations.FirstOrDefault(
                     // Description is a localized string, hence CCIC
@@ -2574,7 +2574,7 @@ namespace Microsoft.PythonTools.Project {
                 pathVar,
                 architecture,
                 languageVersion,
-                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
+                Interpreter.InterpreterUIMode.CannotBeDefault | Interpreter.InterpreterUIMode.CannotBeConfigured
             );
 
             if (!QueryEditProjectFile(false)) {

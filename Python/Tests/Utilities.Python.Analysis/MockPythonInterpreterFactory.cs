@@ -16,10 +16,11 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.Python.Analysis;
 using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
-    public class MockPythonInterpreterFactory : IPythonInterpreterFactory, ICustomInterpreterSerialization, IDisposable {
+    public class MockPythonInterpreterFactory : IPythonInterpreterFactory /*, ICustomInterpreterSerialization*/, IDisposable {
         internal bool? _success;
         public Dictionary<string, object> _properties;
 
@@ -40,7 +41,9 @@ namespace TestUtilities.Python {
         public InterpreterConfiguration Configuration { get; }
 
         public IPythonInterpreter CreateInterpreter() {
-            return new MockPythonInterpreter(this);
+            return null;
+            // LSC
+            //return new MockPythonInterpreter(this);
         }
 
         public Dictionary<string, object> Properties {
@@ -58,12 +61,13 @@ namespace TestUtilities.Python {
             return value;
         }
 
-        bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
-            assembly = GetType().Assembly.Location;
-            typeName = GetType().FullName;
-            properties = Configuration.ToDictionary();
-            return true;
-        }
+        // LSC
+        //bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
+        //    assembly = GetType().Assembly.Location;
+        //    typeName = GetType().FullName;
+        //    properties = Configuration.ToDictionary();
+        //    return true;
+        //}
 
         public void NotifyImportNamesChanged() { }
     }

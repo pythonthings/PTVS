@@ -15,8 +15,9 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using System.Diagnostics;
+using Microsoft.Python.Analysis;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Ast;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonAstInterpreterFactory : AstPythonInterpreterFactory {
@@ -28,8 +29,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
             this(VisualStudioInterpreterConfiguration.CreateFromDictionary(properties), InterpreterFactoryCreationOptions.FromDictionary(properties)) { }
 
         public override IPythonInterpreter CreateInterpreter() {
-            var pythonInterpreter = base.CreateInterpreter();
-            return new IronPythonInterpreter(this, pythonInterpreter);
+            Debug.Fail("Not implemented");
+            return null;
+            // LSC
+            //var pythonInterpreter = base.CreateInterpreter();
+            //return new IronPythonInterpreter(this, pythonInterpreter);
         }
     }
 }

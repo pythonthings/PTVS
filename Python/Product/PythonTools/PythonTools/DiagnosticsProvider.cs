@@ -234,19 +234,20 @@ namespace Microsoft.PythonTools {
             }
             writer.WriteLine();
 
-            if (includeAnalysisLog) {
-                writer.WriteLine("Environment Analysis Logs: ");
-                foreach (var provider in knownProviders) {
-                    foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithLog>()) {
-                        writer.WriteLine(((IPythonInterpreterFactory)factory).Configuration.Description);
-                        string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
-                        if (!string.IsNullOrEmpty(analysisLog)) {
-                            writer.WriteLine(analysisLog);
-                        }
-                        writer.WriteLine();
-                    }
-                }
-            }
+            // LSC
+            //if (includeAnalysisLog) {
+            //    writer.WriteLine("Environment Analysis Logs: ");
+            //    foreach (var provider in knownProviders) {
+            //        foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithLog>()) {
+            //            writer.WriteLine(((IPythonInterpreterFactory)factory).Configuration.Description);
+            //            string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
+            //            if (!string.IsNullOrEmpty(analysisLog)) {
+            //                writer.WriteLine(analysisLog);
+            //            }
+            //            writer.WriteLine();
+            //        }
+            //    }
+            //}
         }
 
         private static string GetProjectProperty(EnvDTE.Project project, string name) {

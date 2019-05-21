@@ -27,10 +27,11 @@ using Microsoft.VisualStudio.Shell;
 [assembly: CLSCompliant(false)]
 [assembly: NeutralResourcesLanguage("en-US")]
 
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.LanguageServer.Core", CodeBase = "Microsoft.Python.LanguageServer.Core.dll")]
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Analysis.Engine", CodeBase = "Microsoft.Python.Analysis.Engine.dll")]
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Ipc.Json", CodeBase = "Microsoft.PythonTools.Ipc.Json.dll")]
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Analyzer", CodeBase = "Microsoft.PythonTools.Analyzer.exe")]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Analysis", CodeBase = @"LanguageServer\x86\Microsoft.Python.Analysis.dll")]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Analysis.Core", CodeBase = @"LanguageServer\x86\Microsoft.Python.Analysis.Core.dll")]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Core", CodeBase = @"LanguageServer\x86\Microsoft.Python.Core.dll")]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.LanguageServer", CodeBase = @"LanguageServer\x86\Microsoft.Python.LanguageServer.dll")]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"LanguageServer\x86\Microsoft.Python.Parsing.dll")]
 
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools", CodeBase = "Microsoft.PythonTools.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Attacher", CodeBase = "Microsoft.PythonTools.Attacher.exe", Version = AssemblyVersionInfo.StableVersion)]
@@ -39,6 +40,7 @@ using Microsoft.VisualStudio.Shell;
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.EnvironmentsList", CodeBase = "Microsoft.PythonTools.EnvironmentsList.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Debugger", CodeBase = "Microsoft.PythonTools.Debugger.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Debugger.Concord", CodeBase = "Microsoft.PythonTools.Debugger.Concord.dll", Version = AssemblyVersionInfo.StableVersion)]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Ipc.Json", CodeBase = "Microsoft.PythonTools.Ipc.Json.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.ProjectWizards", CodeBase = "Microsoft.PythonTools.ProjectWizards.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.VSCommon", CodeBase = "Microsoft.PythonTools.VSCommon.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.VSInterpreters", CodeBase = "Microsoft.PythonTools.VSInterpreters.dll", Version = AssemblyVersionInfo.StableVersion)]

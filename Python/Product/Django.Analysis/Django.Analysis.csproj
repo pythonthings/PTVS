@@ -47,8 +47,6 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
-    <Reference Include="Microsoft.PythonTools.Analyzer" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DjangoAnalyzer.TagsAndFilters.cs" />

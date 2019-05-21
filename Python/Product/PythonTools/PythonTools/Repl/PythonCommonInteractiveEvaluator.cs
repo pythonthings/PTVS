@@ -23,12 +23,12 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
@@ -343,16 +343,19 @@ namespace Microsoft.PythonTools.Repl {
                 return true;
             }
 
-            var config = Configuration;
-            var parser = Parser.CreateParser(new StringReader(text), LanguageVersion);
-            parser.ParseInteractiveCode(out pr);
-            if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
-                return text.EndsWithOrdinal("\n");
-            }
-            if (pr == ParseResult.IncompleteToken) {
-                return false;
-            }
+            // LSC
+            // https://github.com/microsoft/python-language-server/issues/1057
             return true;
+            //var config = Configuration;
+            //var parser = Parser.CreateParser(new StringReader(text), LanguageVersion);
+            //parser.ParseInteractiveCode(out pr);
+            //if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
+            //    return text.EndsWithOrdinal("\n");
+            //}
+            //if (pr == ParseResult.IncompleteToken) {
+            //    return false;
+            //}
+            //return true;
         }
 
         protected abstract Task ExecuteStartupScripts(string scriptsPath);

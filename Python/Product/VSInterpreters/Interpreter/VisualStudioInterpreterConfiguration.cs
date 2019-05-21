@@ -16,8 +16,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+#if !BUILDTASKS_CORE
+using Microsoft.Python.Analysis.Core.Interpreter;
+#endif
 
 namespace Microsoft.PythonTools.Interpreter {
     public class VisualStudioInterpreterConfiguration : InterpreterConfiguration, IEquatable<VisualStudioInterpreterConfiguration> {

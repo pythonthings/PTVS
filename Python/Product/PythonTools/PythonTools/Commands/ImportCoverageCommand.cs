@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.CodeCoverage;
 // LSC
 //using Microsoft.PythonTools.Editor;

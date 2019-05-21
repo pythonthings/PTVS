@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Parsing;
 using static Microsoft.PythonTools.Strings;
 

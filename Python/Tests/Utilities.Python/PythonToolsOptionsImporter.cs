@@ -19,7 +19,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
+using Microsoft.Python.Parsing;
 
 namespace TestUtilities.Python {
     internal static class PythonToolsOptionsImporter {

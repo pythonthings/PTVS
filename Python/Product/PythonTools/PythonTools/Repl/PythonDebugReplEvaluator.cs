@@ -20,6 +20,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Python.Analysis.Types;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
@@ -127,24 +129,28 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         bool CanExecuteCodeExperimental(string text) {
-            var pr = ParseResult.Complete;
+            //var pr = ParseResult.Complete;
             if (string.IsNullOrEmpty(text)) {
                 return true;
             }
             if (string.IsNullOrWhiteSpace(text) && text.EndsWithOrdinal("\n")) {
-                pr = ParseResult.Empty;
+                //pr = ParseResult.Empty;
                 return true;
             }
 
-            var parser = Parser.CreateParser(new StringReader(text), PythonLanguageVersion.None);
-            parser.ParseInteractiveCode(out pr);
-            if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
-                return text.EndsWithOrdinal("\n");
-            }
-            if (pr == ParseResult.IncompleteToken) {
-                return false;
-            }
+            // LSC
+            // https://github.com/microsoft/python-language-server/issues/1057
             return true;
+
+            //var parser = Parser.CreateParser(new StringReader(text), PythonLanguageVersion.None);
+            //parser.ParseInteractiveCode(out pr);
+            //if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
+            //    return text.EndsWithOrdinal("\n");
+            //}
+            //if (pr == ParseResult.IncompleteToken) {
+            //    return false;
+            //}
+            //return true;
         }
 
         public Task<ExecutionResult> ExecuteCodeAsync(string text) {
@@ -290,7 +296,7 @@ namespace Microsoft.PythonTools.Repl {
                     var completionResults = result
                                     .Split(':')
                                     .Where(r => !string.IsNullOrEmpty(r))
-                                    .Select(r => new CompletionResult(r, Interpreter.PythonMemberType.Field))
+                                    .Select(r => new CompletionResult(r, PythonMemberType.Generic))
                                     .ToArray();
                     return completionResults;
                 }

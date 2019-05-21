@@ -16,6 +16,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.Python.Analysis.Core.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Environments {

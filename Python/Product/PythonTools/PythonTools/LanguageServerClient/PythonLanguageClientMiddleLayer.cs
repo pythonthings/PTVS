@@ -14,45 +14,48 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.LanguageServer.Client;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
-using Newtonsoft.Json.Linq;
 
-namespace Microsoft.PythonTools.LanguageServerClient {
-    class PythonLanguageClientMiddleLayer : ILanguageClientCompletionProvider {
-        private readonly object _replEvaluator;
+// TODO: 'ILanguageClientCompletionProvider' is obsolete: 'Use ILanguageClientMiddleLayer instead'
 
-        public PythonLanguageClientMiddleLayer(object replEvaluator) {
-            _replEvaluator = replEvaluator;
-        }
+//using System;
+//using System.Threading.Tasks;
+//using Microsoft.VisualStudio.LanguageServer.Client;
+//using Microsoft.VisualStudio.LanguageServer.Protocol;
+//using Newtonsoft.Json.Linq;
 
-        public async Task<object> RequestCompletions(CompletionParams param, Func<CompletionParams, Task<object>> sendRequest) {
-            var serverCompletions = await sendRequest(param);
+//namespace Microsoft.PythonTools.LanguageServerClient {
+//    class PythonLanguageClientMiddleLayer : ILanguageClientCompletionProvider {
+//        private readonly object _replEvaluator;
 
-            var jsonObj = (JObject)serverCompletions;
-            var items = (JArray)jsonObj.GetValue("items");
+//        public PythonLanguageClientMiddleLayer(object replEvaluator) {
+//            _replEvaluator = replEvaluator;
+//        }
 
-            // Example of modifying the server results (update labels)
-            foreach (JObject item in items) {
-                var label = (JValue)item["label"];
-                label.Value = label.Value + " PLS";
-            }
+//        public async Task<object> RequestCompletions(CompletionParams param, Func<CompletionParams, Task<object>> sendRequest) {
+//            var serverCompletions = await sendRequest(param);
 
-            if (_replEvaluator != null) {
-                // call into repl evaluator to get completions from running python process
-                //var replObj = await _replEvaluator.GetCompletionsAsync();
-                //if (replObj != null) {
-                //    // TODO: merge REPL results with the ones from LS
-                //}
-            }
+//            var jsonObj = (JObject)serverCompletions;
+//            var items = (JArray)jsonObj.GetValue("items");
 
-            return serverCompletions;
-        }
+//            // Example of modifying the server results (update labels)
+//            foreach (JObject item in items) {
+//                var label = (JValue)item["label"];
+//                label.Value = label.Value + " PLS";
+//            }
 
-        public Task<CompletionItem> ResolveCompletion(CompletionItem item, Func<CompletionItem, Task<CompletionItem>> sendRequest) {
-            return Task.FromResult<CompletionItem>(null);
-        }
-    }
-}
+//            if (_replEvaluator != null) {
+//                // call into repl evaluator to get completions from running python process
+//                //var replObj = await _replEvaluator.GetCompletionsAsync();
+//                //if (replObj != null) {
+//                //    // TODO: merge REPL results with the ones from LS
+//                //}
+//            }
+
+//            return serverCompletions;
+//        }
+
+//        public Task<CompletionItem> ResolveCompletion(CompletionItem item, Func<CompletionItem, Task<CompletionItem>> sendRequest) {
+//            return Task.FromResult<CompletionItem>(null);
+//        }
+//    }
+//}

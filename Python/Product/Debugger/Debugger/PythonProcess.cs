@@ -523,8 +523,8 @@ namespace Microsoft.PythonTools.Debugger {
             }
 
             foreach (var statement in walker.Statements) {
-                int start = statement.GetStart().Line;
-                int end = statement.Body.GetEnd().Line + 1;
+                int start = statement.GetStart(ast).Line;
+                int end = statement.Body.GetEnd(ast).Line + 1;
                 var expressions = new List<string>();
 
                 if (statement.Handlers == null) {

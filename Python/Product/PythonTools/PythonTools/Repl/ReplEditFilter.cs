@@ -590,71 +590,66 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal static IEnumerable<string> JoinToCompleteStatements(IEnumerable<string> lines, PythonLanguageVersion version, bool fixNewLine = true) {
-            return lines;
+            StringBuilder temp = new StringBuilder();
+            string prevText = null;
+            ParseResult? prevParseResult = null;
 
-            // LSC
-            // https://github.com/microsoft/python-language-server/issues/1057
+            using (var e = new PeekableEnumerator<string>(lines)) {
+                bool skipNextMoveNext = false;
+                while (skipNextMoveNext || e.MoveNext()) {
+                    skipNextMoveNext = false;
+                    var line = e.Current;
 
-            //StringBuilder temp = new StringBuilder();
-            //string prevText = null;
-            //ParseResult? prevParseResult = null;
+                    if (e.HasNext) {
+                        temp.AppendLine(line);
+                    } else {
+                        temp.Append(line);
+                    }
+                    string newCode = temp.ToString();
 
-            //using (var e = new PeekableEnumerator<string>(lines)) {
-            //    bool skipNextMoveNext = false;
-            //    while (skipNextMoveNext || e.MoveNext()) {
-            //        skipNextMoveNext = false;
-            //        var line = e.Current;
+                    var parser = Parser.CreateParser(new StringReader(newCode), version);
+                    ParseResult result;
+                    parser.ParseInteractiveCode(null, out result);
 
-            //        if (e.HasNext) {
-            //            temp.AppendLine(line);
-            //        } else {
-            //            temp.Append(line);
-            //        }
-            //        string newCode = temp.ToString();
+                    // if this parse is invalid then we need more text to be valid.
+                    // But if this text is invalid and the previous parse was incomplete
+                    // then appending more text won't fix things - the code in invalid, the user
+                    // needs to fix it, so let's not break it up which would prevent that from happening.
+                    if (result == ParseResult.Empty) {
+                        if (!String.IsNullOrWhiteSpace(newCode)) {
+                            // comment line, include w/ following code.
+                            prevText = newCode;
+                            prevParseResult = result;
+                        } else {
+                            temp.Clear();
+                        }
+                    } else if (result == ParseResult.Complete) {
+                        yield return FixEndingNewLine(newCode, fixNewLine);
+                        temp.Clear();
 
-            //        var parser = Parser.CreateParser(new StringReader(newCode), version);
-            //        ParseResult result;
-            //        parser.ParseInteractiveCode(out result);
+                        prevParseResult = null;
+                        prevText = null;
+                    } else if (ShouldAppendCode(prevParseResult, result)) {
+                        prevText = newCode;
+                        prevParseResult = result;
+                    } else if (prevText != null) {
+                        // we have a complete input
+                        yield return FixEndingNewLine(prevText, fixNewLine);
+                        temp.Clear();
 
-            //        // if this parse is invalid then we need more text to be valid.
-            //        // But if this text is invalid and the previous parse was incomplete
-            //        // then appending more text won't fix things - the code in invalid, the user
-            //        // needs to fix it, so let's not break it up which would prevent that from happening.
-            //        if (result == ParseResult.Empty) {
-            //            if (!String.IsNullOrWhiteSpace(newCode)) {
-            //                // comment line, include w/ following code.
-            //                prevText = newCode;
-            //                prevParseResult = result;
-            //            } else {
-            //                temp.Clear();
-            //            }
-            //        } else if (result == ParseResult.Complete) {
-            //            yield return FixEndingNewLine(newCode, fixNewLine);
-            //            temp.Clear();
+                        // reparse this line so our state remains consistent as if we just started out.
+                        skipNextMoveNext = true;
+                        prevParseResult = null;
+                        prevText = null;
+                    } else {
+                        prevParseResult = result;
+                    }
+                }
+            }
 
-            //            prevParseResult = null;
-            //            prevText = null;
-            //        } else if (ShouldAppendCode(prevParseResult, result)) {
-            //            prevText = newCode;
-            //            prevParseResult = result;
-            //        } else if (prevText != null) {
-            //            // we have a complete input
-            //            yield return FixEndingNewLine(prevText, fixNewLine);
-            //            temp.Clear();
-
-            //            // reparse this line so our state remains consistent as if we just started out.
-            //            skipNextMoveNext = true;
-            //            prevParseResult = null;
-            //            prevText = null;
-            //        } else {
-            //            prevParseResult = result;
-            //        }
-            //    }
-            //}
-
-            //if (temp.Length > 0) {
-            //    yield return FixEndingNewLine(temp.ToString(), fixNewLine);
-            //}
+            if (temp.Length > 0) {
+                yield return FixEndingNewLine(temp.ToString(), fixNewLine);
+            }
         }
 
         internal static IEnumerable<string> SplitAndDedent(string code) {

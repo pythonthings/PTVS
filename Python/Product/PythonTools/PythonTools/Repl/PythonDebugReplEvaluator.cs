@@ -129,7 +129,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         bool CanExecuteCodeExperimental(string text) {
-            //var pr = ParseResult.Complete;
+            var pr = ParseResult.Complete;
             if (string.IsNullOrEmpty(text)) {
                 return true;
             }
@@ -138,19 +138,15 @@ namespace Microsoft.PythonTools.Repl {
                 return true;
             }
 
-            // LSC
-            // https://github.com/microsoft/python-language-server/issues/1057
+            var parser = Parser.CreateParser(new StringReader(text), PythonLanguageVersion.None);
+            parser.ParseInteractiveCode(null, out pr);
+            if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
+                return text.EndsWithOrdinal("\n");
+            }
+            if (pr == ParseResult.IncompleteToken) {
+                return false;
+            }
             return true;
-
-            //var parser = Parser.CreateParser(new StringReader(text), PythonLanguageVersion.None);
-            //parser.ParseInteractiveCode(out pr);
-            //if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
-            //    return text.EndsWithOrdinal("\n");
-            //}
-            //if (pr == ParseResult.IncompleteToken) {
-            //    return false;
-            //}
-            //return true;
         }
 
         public Task<ExecutionResult> ExecuteCodeAsync(string text) {

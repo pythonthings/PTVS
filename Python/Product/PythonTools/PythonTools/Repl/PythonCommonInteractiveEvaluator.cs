@@ -343,19 +343,16 @@ namespace Microsoft.PythonTools.Repl {
                 return true;
             }
 
-            // LSC
-            // https://github.com/microsoft/python-language-server/issues/1057
+            var config = Configuration;
+            var parser = Parser.CreateParser(new StringReader(text), LanguageVersion);
+            parser.ParseInteractiveCode(null, out pr);
+            if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
+                return text.EndsWithOrdinal("\n");
+            }
+            if (pr == ParseResult.IncompleteToken) {
+                return false;
+            }
             return true;
-            //var config = Configuration;
-            //var parser = Parser.CreateParser(new StringReader(text), LanguageVersion);
-            //parser.ParseInteractiveCode(out pr);
-            //if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
-            //    return text.EndsWithOrdinal("\n");
-            //}
-            //if (pr == ParseResult.IncompleteToken) {
-            //    return false;
-            //}
-            //return true;
         }
 
         protected abstract Task ExecuteStartupScripts(string scriptsPath);

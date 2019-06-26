@@ -69,8 +69,8 @@ namespace Microsoft.PythonTools.CodeCoverage {
                 return false;
             }
 
-            var start = node.GetStart();
-            var end = node.GetEnd();
+            var start = node.GetStart(_ast);
+            var end = node.GetEnd(_ast);
             bool covered;
             bool multiline = false;
             if (start.Line != end.Line) {
@@ -407,12 +407,12 @@ namespace Microsoft.PythonTools.CodeCoverage {
             if (UpdateLineInfo(node, true)) {
                 // make sure we get the name marked as well if we have a multiline
                 // name expression...
-                var nameSpan = node.GetNameSpan();
+                var nameSpan = node.GetNameSpan(_ast);
                 MarkCoverage(
                     true, 
                     nameSpan.Start, 
                     nameSpan.End, 
-                    IsCovered(node.GetStart().Line)
+                    IsCovered(node.GetStart(_ast).Line)
                 );
                 return true;
             }

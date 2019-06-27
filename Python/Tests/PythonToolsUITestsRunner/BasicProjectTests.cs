@@ -190,12 +190,12 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetReferences));
         }
 
-        [Ignore] // TODO: fix this test
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void DotNetSearchPathReferences() {
-            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetSearchPathReferences));
-        }
+        //[Ignore] // TODO: fix this test
+        //[TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        //[TestCategory("Installed")]
+        //public void DotNetSearchPathReferences() {
+        //    _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetSearchPathReferences));
+        //}
 
         //[TestMethod, Priority(2)]
         //[TestCategory("Installed")]

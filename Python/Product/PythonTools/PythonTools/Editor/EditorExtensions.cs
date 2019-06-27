@@ -205,47 +205,48 @@ namespace Microsoft.PythonTools.Editor.Core {
             }
         }
 
-        public static SourceLocation ToSourceLocation(this SnapshotPoint point) {
-            return new SourceLocation(
-                point.Position,
-                point.GetContainingLine().LineNumber + 1,
-                point.Position - point.GetContainingLine().Start.Position + 1
-            );
-        }
+        // LSC
+        //public static SourceLocation ToSourceLocation(this SnapshotPoint point) {
+        //    return new SourceLocation(
+        //        point.Position,
+        //        point.GetContainingLine().LineNumber + 1,
+        //        point.Position - point.GetContainingLine().Start.Position + 1
+        //    );
+        //}
 
-        public static SourceSpan ToSourceSpan(this SnapshotSpan span) {
-            return new SourceSpan(
-                ToSourceLocation(span.Start),
-                ToSourceLocation(span.End)
-            );
-        }
+        //public static SourceSpan ToSourceSpan(this SnapshotSpan span) {
+        //    return new SourceSpan(
+        //        ToSourceLocation(span.Start),
+        //        ToSourceLocation(span.End)
+        //    );
+        //}
 
-        public static SnapshotPoint ToSnapshotPoint(this SourceLocation location, ITextSnapshot snapshot) {
-            ITextSnapshotLine line;
+        //public static SnapshotPoint ToSnapshotPoint(this SourceLocation location, ITextSnapshot snapshot) {
+        //    ITextSnapshotLine line;
 
-            if (location.Line < 1) {
-                return new SnapshotPoint(snapshot, 0);
-            }
+        //    if (location.Line < 1) {
+        //        return new SnapshotPoint(snapshot, 0);
+        //    }
 
-            try {
-                line = snapshot.GetLineFromLineNumber(location.Line - 1);
-            } catch (ArgumentOutOfRangeException) {
-                Debug.Assert(location.Line == snapshot.LineCount + 1 && location.Column == 1,
-                    $"Out of range should only occur at end of snapshot ({snapshot.LineCount + 1}, 1), not at {location}");
-                return new SnapshotPoint(snapshot, snapshot.Length);
-            }
+        //    try {
+        //        line = snapshot.GetLineFromLineNumber(location.Line - 1);
+        //    } catch (ArgumentOutOfRangeException) {
+        //        Debug.Assert(location.Line == snapshot.LineCount + 1 && location.Column == 1,
+        //            $"Out of range should only occur at end of snapshot ({snapshot.LineCount + 1}, 1), not at {location}");
+        //        return new SnapshotPoint(snapshot, snapshot.Length);
+        //    }
 
-            if (location.Column > line.LengthIncludingLineBreak) {
-                return line.EndIncludingLineBreak;
-            }
-            return line.Start + (location.Column - 1);
-        }
+        //    if (location.Column > line.LengthIncludingLineBreak) {
+        //        return line.EndIncludingLineBreak;
+        //    }
+        //    return line.Start + (location.Column - 1);
+        //}
 
-        public static SnapshotSpan ToSnapshotSpan(this SourceSpan span, ITextSnapshot snapshot) {
-            return new SnapshotSpan(
-                ToSnapshotPoint(span.Start, snapshot),
-                ToSnapshotPoint(span.End, snapshot)
-            );
-        }
+        //public static SnapshotSpan ToSnapshotSpan(this SourceSpan span, ITextSnapshot snapshot) {
+        //    return new SnapshotSpan(
+        //        ToSnapshotPoint(span.Start, snapshot),
+        //        ToSnapshotPoint(span.End, snapshot)
+        //    );
+        //}
     }
 }

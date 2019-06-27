@@ -28,8 +28,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Editor;
-// LSC
-//using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -287,32 +286,43 @@ namespace Microsoft.PythonTools {
         //    return serviceProvider.GetComponentModel()?.GetService<PythonEditorServices>();
         //}
 
-        //internal static async Task<PythonLanguageVersion> GetLanguageVersionAsync(this ITextView textView, IServiceProvider serviceProvider) {
-        //    var evaluator = textView.TextBuffer.GetInteractiveWindow().GetPythonEvaluator();
-        //    if (evaluator != null) {
-        //        return evaluator.LanguageVersion;
-        //    }
+        internal static async Task<PythonLanguageVersion> GetLanguageVersionAsync(this ITextView textView, IServiceProvider serviceProvider) {
+            var evaluator = textView.TextBuffer.GetInteractiveWindow().GetPythonEvaluator();
+            if (evaluator != null) {
+                return evaluator.LanguageVersion;
+            }
 
-        //    var entry = textView.TextBuffer.TryGetAnalysisEntry();
-        //    if (entry?.Analyzer != null) {
-        //        return entry.Analyzer.LanguageVersion;
-        //    }
+            // LSC
+            //var entry = textView.TextBuffer.TryGetAnalysisEntry();
+            //if (entry?.Analyzer != null) {
+            //    return entry.Analyzer.LanguageVersion;
+            //}
 
-        //    var analyzer = await serviceProvider.FindAnalyzerAsync(textView);
-        //    if (analyzer is VsProjectAnalyzer pyAnalyzer) {
-        //        return pyAnalyzer.LanguageVersion;
-        //    }
+            //var analyzer = await serviceProvider.FindAnalyzerAsync(textView);
+            //if (analyzer is VsProjectAnalyzer pyAnalyzer) {
+            //    return pyAnalyzer.LanguageVersion;
+            //}
 
-        //    var defaultInterp = serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
-        //    if (defaultInterp?.Configuration != null) {
-        //        try {
-        //            return defaultInterp.Configuration.Version.ToLanguageVersion();
-        //        } catch (InvalidOperationException) {
-        //        }
-        //    }
+            var defaultInterp = serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
+            if (defaultInterp?.Configuration != null) {
+                try {
+                    return defaultInterp.Configuration.Version.ToLanguageVersion();
+                } catch (InvalidOperationException) {
+                }
+            }
 
-        //    return PythonLanguageVersion.None;
-        //}
+            return PythonLanguageVersion.None;
+        }
+
+        // LSC
+        // TODO: this needs to actually get the correct interpreter factory
+        internal static IPythonInterpreterFactory GetInterpreterFactoryAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
+            return serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
+        }
+
+        internal static InterpreterConfiguration GetInterpreterConfigurationAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
+            return textView.GetInterpreterFactoryAtCaret(serviceProvider)?.Configuration;
+        }
 
         /// <summary>
         /// Returns the active VsProjectAnalyzer being used for where the caret is currently located in this view.
@@ -373,21 +383,21 @@ namespace Microsoft.PythonTools {
         /// This maps down to the current Python buffer, determines its filename, and then resolves
         /// that filename back to the project.
         /// </summary>
-        //internal static PythonProjectNode GetProjectAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-        //    var point = textView.BufferGraph.MapDownToFirstMatch(
-        //        textView.Caret.Position.BufferPosition,
-        //        PointTrackingMode.Positive,
-        //        EditorExtensions.IsPythonContent,
-        //        PositionAffinity.Successor
-        //    );
+        internal static PythonProjectNode GetProjectAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
+            var point = textView.BufferGraph.MapDownToFirstMatch(
+                textView.Caret.Position.BufferPosition,
+                PointTrackingMode.Positive,
+                EditorExtensions.IsPythonContent,
+                PositionAffinity.Successor
+            );
 
-        //    if (point != null) {
-        //        var filename = point.Value.Snapshot.TextBuffer.GetFilePath();
-        //        return GetProjectFromFile(serviceProvider, filename);
-        //    }
+            if (point != null) {
+                var filename = point.Value.Snapshot.TextBuffer.GetFilePath();
+                return GetProjectFromFile(serviceProvider, filename);
+            }
 
-        //    return null;
-        //}
+            return null;
+        }
 
         internal static ITextBuffer GetTextBufferFromOpenFile(this IServiceProvider serviceProvider, string filename) {
             var docTable = serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;

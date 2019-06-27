@@ -277,6 +277,7 @@
     <Compile Include="PythonTools\Commands\CurrentEnvironmentListCommand.cs" />
     <Compile Include="PythonTools\Commands\CurrentEnvironmentCommand.cs" />
     <Compile Include="PythonTools\Commands\SwitchToEnvironmentCommand.cs" />
+    <Compile Include="PythonTools\Editor\EditorExtensions.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentSwitcherFileContext.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentSwitcherProjectContext.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentSwitcherWorkspaceContext.cs" />
@@ -298,6 +299,7 @@
     <Compile Include="PythonTools\Environments\EnvironmentViewBase.cs" />
     <Compile Include="PythonTools\Environments\ProjectView.cs" />
     <Compile Include="PythonTools\Environments\UserSpecifiedCondaLocator.cs" />
+    <Compile Include="PythonTools\Intellisense\CodeCellAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ParameterResult.cs" />
     <Compile Include="PythonTools\Navigation\PythonLanguageInfo.cs" />
     <Compile Include="PythonTools\Options\CondaOptions.cs" />

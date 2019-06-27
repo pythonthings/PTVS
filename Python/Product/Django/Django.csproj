@@ -131,15 +131,7 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
-    <Reference Include="Microsoft.Python.Analysis.Core">
-      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Analysis.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Python.Parsing">
-      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Parsing.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Python.Analysis">
-      <HintPath>$(PackagesPath)\LanguageServer\x86\Microsoft.Python.Analysis.dll</HintPath>
-    </Reference>
+    <Reference Include="Microsoft.Python.Analysis.Engine" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ZipProject>
@@ -283,17 +275,17 @@
       <ItemGroup>
         <Compile Include="DjangoEditorFactory.cs" />
         <Compile Include="Formatting\TemplateEditorFormatterProvider.cs" />
-        <Compile Include="Formatting\TemplateFormatDocumentCommandHandler.cs" />
-        <Compile Include="Formatting\TemplateFormatSelectionCommandHandler.cs" />
-        <Compile Include="Formatting\TemplateHtmlCommandFactory.cs" />
+        <Compile Include="Intellisense\AnalyzerExtensions.cs" />
+        <Compile Include="Intellisense\DjangoCompletionSource.cs" />
+        <Compile Include="Intellisense\DjangoCompletionSourceBase.cs" />
+        <Compile Include="Intellisense\DjangoCompletionSourceProvider.cs" />
         <Compile Include="Intellisense\DjangoPredefinedClassificationTypeNames.cs" />
-        <Compile Include="Intellisense\TemplateCommandFactory.cs" />
-        <Compile Include="Intellisense\TemplateCompletionCommandHandler.cs" />
+        <Compile Include="Intellisense\ProjectBlockCompletionContext.cs" />
+        <Compile Include="Intellisense\ProjectBlockCompletionContextBase.cs" />
         <Compile Include="Intellisense\TemplateCompletionController.cs" />
         <Compile Include="Intellisense\TemplateCompletionControllerProvider.cs" />
         <Compile Include="Intellisense\TemplateMainController.cs" />
         <Compile Include="Intellisense\TemplateTextViewConnectionListener.cs" />
-        <Compile Include="Intellisense\TemplateTypingCommandHandler.cs" />
         <Compile Include="Intellisense\TextBufferExtensions.cs" />
         <Compile Include="TemplateContentType.cs" />
         <Compile Include="TemplateParsing\DjangoBlock.cs" />

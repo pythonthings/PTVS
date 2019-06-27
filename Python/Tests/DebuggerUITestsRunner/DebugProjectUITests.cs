@@ -18,7 +18,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestRunnerInterop;
 
 namespace DebuggerUITestsRunner {
-    [TestClass, Ignore]
     public abstract class DebugProjectUITests {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
@@ -43,7 +42,7 @@ namespace DebuggerUITestsRunner {
 
         protected abstract string Interpreter { get; }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DebugPythonProject() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonProject), UseVsCodeDebugger, Interpreter);
@@ -57,8 +56,14 @@ namespace DebuggerUITestsRunner {
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
-        public void DebugPythonProjectWithAndWithoutClearingPythonPath() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonProjectWithAndWithoutClearingPythonPath), UseVsCodeDebugger, Interpreter);
+        public void DebugPythonProjectWithClearingPythonPath() {
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonProjectWithClearingPythonPath), UseVsCodeDebugger, Interpreter);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void DebugPythonProjectWithoutClearingPythonPath() {
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonProjectWithoutClearingPythonPath), UseVsCodeDebugger, Interpreter);
         }
 
         [TestMethod, Priority(0)]
@@ -109,7 +114,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.SetNextLine), UseVsCodeDebugger, Interpreter);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TerminateProcess() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.TerminateProcess), UseVsCodeDebugger, Interpreter);
@@ -127,7 +132,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.MainThread), UseVsCodeDebugger, Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ExpressionEvaluation() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.ExpressionEvaluation), UseVsCodeDebugger, Interpreter);
@@ -176,7 +181,7 @@ namespace DebuggerUITestsRunner {
         }
 
         [Ignore] // Not reliable enough right now
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void LaunchWithErrorsDontRun() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.LaunchWithErrorsDontRun), UseVsCodeDebugger, Interpreter);
@@ -200,7 +205,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithDebuggingNotInProject), UseVsCodeDebugger, Interpreter);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void StartWithoutDebuggingNotInProject() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithoutDebuggingNotInProject), UseVsCodeDebugger, Interpreter);
@@ -218,7 +223,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithDebuggingSubfolderInProject), UseVsCodeDebugger, Interpreter);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void StartWithoutDebuggingInProject() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithoutDebuggingInProject), UseVsCodeDebugger, Interpreter);
@@ -236,7 +241,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithoutDebuggingNoScript), UseVsCodeDebugger, Interpreter);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void WebProjectLauncherNoStartupFile() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.WebProjectLauncherNoStartupFile), UseVsCodeDebugger, Interpreter);
@@ -249,7 +254,6 @@ namespace DebuggerUITestsRunner {
         protected override string Interpreter => ""; // Use the existing global default
     }
 
-    [TestClass, Ignore]
     public abstract class DebugProjectUITestsExperimental : DebugProjectUITests {
         protected override bool UseVsCodeDebugger => true;
     }
@@ -260,7 +264,7 @@ namespace DebuggerUITestsRunner {
     }
 
     [TestClass]
-    public class DebugProjectUITestsExperimental36 : DebugProjectUITestsExperimental {
-        protected override string Interpreter => "Python36|Python36_x64";
+    public class DebugProjectUITestsExperimental37 : DebugProjectUITestsExperimental {
+        protected override string Interpreter => "Python37|Python37_x64";
     }
 }

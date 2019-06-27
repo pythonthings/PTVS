@@ -190,12 +190,12 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetReferences));
         }
 
-        // LSC
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        //public void DotNetSearchPathReferences() {
-        //    _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetSearchPathReferences));
-        //}
+        [Ignore] // TODO: fix this test
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestCategory("Installed")]
+        public void DotNetSearchPathReferences() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetSearchPathReferences));
+        }
 
         //[TestMethod, Priority(2)]
         //[TestCategory("Installed")]
@@ -275,7 +275,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.CopyFolderWithMultipleItems));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void OpenInteractiveFromSolutionExplorer() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.OpenInteractiveFromSolutionExplorer));

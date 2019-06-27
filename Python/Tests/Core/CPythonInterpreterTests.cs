@@ -72,13 +72,12 @@ namespace PythonToolsTests {
             }
         }
 
-        // LSC
-        //[TestMethod, Priority(2)]
-        //public void ImportFromSearchPath() {
-        //    var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
-        //    analyzer.AddModule("test-module", "from test_package import *");
-        //    analyzer.WaitForAnalysis();
-        //    AssertUtil.CheckCollection(analyzer.GetAllNames(), null, new[] { "package_method", "package_method_two", "test_package" });
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        public void ImportFromSearchPath() {
+            var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
+            analyzer.AddModule("test-module", "from test_package import *");
+            analyzer.WaitForAnalysis();
+            AssertUtil.CheckCollection(analyzer.GetAllNames(), null, new[] { "package_method", "package_method_two", "test_package" });
 
         //    analyzer.SetSearchPaths(TestData.GetPath("TestData\\AddImport"));
         //    analyzer.ReanalyzeAll();
@@ -100,7 +99,7 @@ namespace PythonToolsTests {
         //    AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "system" }, new[] { "spam" });
         //}
 
-        //[TestMethod, Priority(2)] // https://github.com/Microsoft/PTVS/issues/4226
+        //[TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)] // https://github.com/Microsoft/PTVS/issues/4226
         //public void ImportFromZipFile() {
         //    var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
         //    analyzer.AddModule("test-module", "from test_package import *; from test_package.sub_package import *");

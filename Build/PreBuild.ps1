@@ -63,7 +63,7 @@ try {
     @("x86", "x64") | %{
         $filename = "Python-Language-Server-win-$_.$ver"
         Invoke-WebRequest "https://pvsc.azureedge.net/$container/$filename.nupkg" -OutFile "$outdir\$filename.zip"
-        Expand-Archive "$outdir\$filename.zip" -DestinationPath "$outdir\LanguageServer\$_"
+        Expand-Archive "$outdir\$filename.zip" -DestinationPath "$outdir\LanguageServer\$_" -Force
         Write-Host "Expanded $filename"
     }
 

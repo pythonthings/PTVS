@@ -263,6 +263,9 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Client" />
+    <Reference Include="Microsoft.Internal.VisualStudio.Shell.Embeddable">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol" />
     <Reference Include="StreamJsonRpc" />
     <Reference Include="System.Net.Http" />
@@ -371,6 +374,7 @@
       <DependentUpon>AddEnvironmentDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
+    <Compile Include="PythonTools\PythonFeedbackDiagnosticFileProvider.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientInitializationOptions.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClient.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientCustomTarget.cs" />

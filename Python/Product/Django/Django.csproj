@@ -131,7 +131,6 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ZipProject>

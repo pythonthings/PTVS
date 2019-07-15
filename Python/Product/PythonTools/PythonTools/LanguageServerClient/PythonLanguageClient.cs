@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     /// </remarks>
     [ContentType(PythonCoreConstants.ContentType)]
     [Export(typeof(ILanguageClient))]
-    class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage {
+    class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2 {
         private readonly IServiceProvider _site;
         private readonly IVsFolderWorkspaceService _workspaceService;
         private readonly IInterpreterOptionsService _optionsService;

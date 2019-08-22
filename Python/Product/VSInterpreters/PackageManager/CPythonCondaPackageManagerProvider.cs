@@ -24,6 +24,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IPackageManagerProvider))]
     sealed class CPythonCondaPackageManagerProvider : IPackageManagerProvider {
         private readonly IServiceProvider _site;
+        //private readonly Dictionary<IPythonInterpreterFactory, IPackageManager> _packageManagerMap;
         private Lazy<string> _latestCondaExe;
 
         [ImportingConstructor]
@@ -31,6 +32,7 @@ namespace Microsoft.PythonTools.Interpreter {
             [Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null
         ) {
             _site = site;
+            //_packageManagerMap = new Dictionary<IPythonInterpreterFactory, IPackageManager>();
 
             // This can be slow, if there are 2 or more global conda installations
             // (some conda versions have long startup time), so we only fetch it once.
@@ -38,10 +40,35 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
+            IPackageManager pm = null;
+
+            // TODO: reusing instances is causing instability, so turning it off for now
+            // https://github.com/microsoft/PTVS/issues/5517
+
+            //lock (_packageManagerMap) {
+            //    if (!_packageManagerMap.TryGetValue(factory, out pm)) {
+            //        pm = TryCreatePackageManager(factory);
+            //        if (pm != null) {
+            //            _packageManagerMap.Add(factory, pm);
+            //        }
+            //    }
+            //}
+
+            pm = TryCreatePackageManager(factory);
+            if (pm != null) {
+                yield return pm;
+            }
+        }
+
+        private IPackageManager TryCreatePackageManager(IPythonInterpreterFactory factory) {
+            if (factory == null) {
+                return null;
+            }
+
             var prefixPath = factory.Configuration.GetPrefixPath();
             if (string.IsNullOrEmpty(prefixPath) ||
                 !Directory.Exists(Path.Combine(prefixPath, "conda-meta"))) {
-                yield break;
+                return null;
             }
 
             var condaPath = CondaUtils.GetCondaExecutablePath(prefixPath);
@@ -52,17 +79,13 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             if (string.IsNullOrEmpty(condaPath)) {
-                yield break;
+                return null;
             }
 
-            IPackageManager pm = null;
             try {
-                pm = new CondaPackageManager(factory, condaPath);
+                return new CondaPackageManager(factory, condaPath);
             } catch (NotSupportedException) {
-                pm = null;
-            }
-            if (pm != null) {
-                yield return pm;
+                return null;
             }
         }
     }

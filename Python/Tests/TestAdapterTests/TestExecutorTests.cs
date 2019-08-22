@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias pt;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -27,16 +28,26 @@ using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
+using TestAdapterTests.Mocks;
 using TestUtilities;
 using TestUtilities.Python;
+using pt::Microsoft.PythonTools.CodeCoverage;
 
 namespace TestAdapterTests {
     [TestClass, Ignore]
     public abstract class TestExecutorTests {
-        internal const string OldImportErrorFormat = "No module named {0}";
-        internal const string NewImportErrorFormat = "No module named '{0}'";
+        private const string FrameworkPytest = "Pytest";
+        private const string FrameworkUnittest = "Unittest";
+
+        protected abstract PythonVersion Version { get; }
+
+        [ClassCleanup]
+        public static void Cleanup() {
+            TestEnvironment.Clear();
+        }
 
         [TestInitialize]
         public void CheckVersion() {
@@ -45,236 +56,310 @@ namespace TestAdapterTests {
             }
         }
 
-        protected abstract PythonVersion Version { get; }
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunUnittest() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
-        protected virtual string ImportErrorFormat => OldImportErrorFormat;
+            var testFile1Path = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_ut.py"), testFile1Path);
+
+            var testFile2Path = Path.Combine(testEnv.SourceFolderPath, "test_runtest.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_runtest.py"), testFile2Path);
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_ut_fail",
+                    "test_ut.py::TestClassUT::test_ut_fail",
+                    testFile1Path,
+                    4,
+                    outcome: TestOutcome.Failed
+                ),
+                new TestInfo(
+                    "test_ut_pass",
+                    "test_ut.py::TestClassUT::test_ut_pass",
+                    testFile1Path,
+                    7,
+                    outcome: TestOutcome.Passed
+                ),
+                new TestInfo(
+                    "runTest",
+                    "test_runtest.py::TestClassRunTest::runTest",
+                    testFile2Path,
+                    4,
+                    outcome: TestOutcome.Passed
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
 
         [TestMethod, Priority(0)]
-        public void FromCommandLineArgsRaceCondition() {
-            // https://pytools.codeplex.com/workitem/1429
+        [TestCategory("10s")]
+        public void RunUnittestLargeTestCount() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
-            var mre = new ManualResetEvent(false);
-            var tasks = new Task<bool>[100];
-            try {
-                for (int i = 0; i < tasks.Length; i += 1) {
-                    tasks[i] = Task.Run(() => {
-                        mre.WaitOne();
-                        using (var arg = VisualStudioProxy.FromProcessId(123)) {
-                            return arg is VisualStudioProxy;
-                        }
-                    });
-                }
-                mre.Set();
-                Assert.IsTrue(Task.WaitAll(tasks, TimeSpan.FromSeconds(30.0)));
-                Assert.IsTrue(tasks.All(t => t.Result));
-            } finally {
-                mre.Dispose();
-                Task.WaitAll(tasks, TimeSpan.FromSeconds(30.0));
-            }
-        }
+            // Test that we don't try passing 1000 tests via command line arguments
+            // since that would exceed the 32k limit and fail.
+            var testContentsFormat = @"import unittest
 
-        [TestMethod]
-        public void TestBestFile() {
-            var file1 = "C:\\Some\\Path\\file1.py";
-            var file2 = "C:\\Some\\Path\\file2.py";
-            var best = TestExecutor.UpdateBestFile(null, file1);
-            Assert.AreEqual(best, file1);
+class ManyTest(unittest.TestCase):
+{0}
 
-            best = TestExecutor.UpdateBestFile(null, file1);
-            Assert.AreEqual(best, file1);
+if __name__ == '__main__':
+    unittest.main()
+";
+            var testFunctions = new StringBuilder();
+            var expectedTests = new List<TestInfo>();
+            var moduleName = "test_many";
+            var className = "ManyTest";
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, $"{moduleName}.py");
 
-            best = TestExecutor.UpdateBestFile(best, file2);
-            Assert.AreEqual("C:\\Some\\Path", best);
-        }
+            for (int i = 0; i < 1000; i++) {
+                var funcName = $"test_func_{i}";
+                testFunctions.AppendLine($"    def {funcName}(self): pass");
 
-        // {0} is the test results directory
-        // {1} is one or more formatted _runSettingProject lines
-        // {2} is 'true' or 'false' depending on whether the tests should be run
-        // {3} is 'true' or 'false' depending on whether the console should be shown
-        private const string _runSettings = @"<?xml version=""1.0""?><RunSettings><DataCollectionRunSettings><DataCollectors /></DataCollectionRunSettings><RunConfiguration><ResultsDirectory>{0}</ResultsDirectory><TargetPlatform>X86</TargetPlatform><TargetFrameworkVersion>Framework45</TargetFrameworkVersion></RunConfiguration><Python><TestCases>
-{1}
-</TestCases>
-<DryRun value=""{2}"" /><ShowConsole value=""{3}"" /></Python></RunSettings>";
-
-        // {0} is the project home directory, ending with a backslash
-        // {1} is the project filename, including extension
-        // {2} is the interpreter path
-        // {3} is one or more formatted _runSettingTest lines
-        // {4} is one or more formatten _runSettingEnvironment lines
-        private const string _runSettingProject = @"<Project path=""{0}{1}"" home=""{0}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{0}"" interpreter=""{2}"" pathEnv=""PYTHONPATH""><Environment>{4}</Environment><SearchPaths>{5}</SearchPaths>
-{3}
-</Project>";
-
-        // {0} is the variable name
-        // {1} is the variable value
-        private const string _runSettingEnvironment = @"<Variable name=""{0}"" value=""{1}"" />";
-
-        // {0} is the search path
-        private const string _runSettingSearch = @"<Search value=""{0}"" />";
-
-        // {0} is the full path to the file
-        // {1} is the class name
-        // {2} is the method name
-        // {3} is the line number (1-indexed)
-        // {4} is the column number (1-indexed)
-        private const string _runSettingTest = @"<Test className=""{1}"" file=""{0}"" line=""{3}"" column=""{4}"" method=""{2}"" />";
-
-        private static string GetInterpreterPath(string projectFile) {
-            var doc = new XmlDocument();
-            doc.Load(projectFile);
-            var ns = new XmlNamespaceManager(doc.NameTable);
-            ns.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
-            var id = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:InterpreterId", ns).FirstChild.Value;
-            return PythonPaths.Versions.First(p => p.Id == id).InterpreterPath;
-        }
-
-        private static IEnumerable<string> GetEnvironmentVariables(string projectFile) {
-            var doc = new XmlDocument();
-            doc.Load(projectFile);
-            var ns = new XmlNamespaceManager(doc.NameTable);
-            ns.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
-            var env = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:Environment", ns)?.FirstChild?.Value;
-            if (env == null) {
-                return Enumerable.Empty<string>();
-            }
-            return PathUtils.ParseEnvironment(env).Select(kv => string.Format(_runSettingEnvironment, kv.Key, kv.Value));
-        }
-
-        private static IEnumerable<string> GetSearchPaths(string projectFile) {
-            var doc = new XmlDocument();
-            doc.Load(projectFile);
-            var ns = new XmlNamespaceManager(doc.NameTable);
-            ns.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
-            var searchPaths = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:SearchPath", ns)?.FirstChild?.Value;
-
-            var projectDir = PathUtils.GetParent(projectFile);
-            var elements = new List<string> { _runSettingSearch.FormatInvariant(projectDir) };
-            if (searchPaths == null) {
-                return elements;
-            }
-            elements.AddRange(searchPaths.Split(';').Select(p =>
-                _runSettingSearch.FormatInvariant(PathUtils.GetAbsoluteDirectoryPath(projectDir, p))
-            ));
-            return elements;
-        }
-
-        internal static MockRunContext CreateRunContext(
-            IEnumerable<TestInfo> expected,
-            string interpreter = null,
-            bool dryRun = false,
-            bool showConsole = false
-        ) {
-            var projects = new List<string>();
-            var testCases = new List<TestCase>();
-
-            var baseDir = TestData.GetTempPath();
-            var sources = Path.Combine(baseDir, "Source");
-            var results = Path.Combine(baseDir, "Results");
-
-            foreach (var proj in expected.GroupBy(e => e.ProjectFilePath)) {
-                var projectSource = Path.GetDirectoryName(proj.Key);
-
-                Func<string, string> Rebase = d => PathUtils.GetAbsoluteFilePath(
-                    baseDir,
-                    PathUtils.GetRelativeFilePath(TestData.GetPath(), d)
-                );
-
-                var projName = Rebase(projectSource);
-                FileUtils.CopyDirectory(projectSource, projName, true);
-
-                var sb = new StringBuilder();
-                foreach (var e in proj) {
-                    var tc = e.TestCase;
-                    tc.CodeFilePath = Rebase(tc.CodeFilePath);
-                    testCases.Add(tc);
-
-                    sb.AppendLine(_runSettingTest.FormatInvariant(
-                        Rebase(e.SourceCodeFilePath),
-                        e.ClassName,
-                        e.MethodName,
-                        e.SourceCodeLineNumber,
-                        8
-                    ));
-                }
-
-                projects.Add(string.Format(_runSettingProject,
-                    PathUtils.EnsureEndSeparator(projName),
-                    Path.GetFileName(proj.Key),
-                    interpreter ?? GetInterpreterPath(proj.Key),
-                    sb.ToString(),
-                    string.Join(Environment.NewLine, GetEnvironmentVariables(proj.Key)),
-                    string.Join(Environment.NewLine, GetSearchPaths(proj.Key))
+                expectedTests.Add(new TestInfo(
+                    funcName,
+                    $"{moduleName}.py::{className}::{funcName}",
+                    testFilePath,
+                    4 + i,
+                    outcome: TestOutcome.Passed
                 ));
             }
 
-            foreach (var p in projects) {
-                Console.WriteLine(p);
-            }
+            var testContents = string.Format(testContentsFormat, testFunctions.ToString());
+            File.WriteAllText(testFilePath, testContents);
 
-            return new MockRunContext(new MockRunSettings(string.Format(_runSettings,
-                results,
-                string.Join(Environment.NewLine, projects),
-                dryRun ? "true" : "false",
-                showConsole ? "true" : "false"
-            )), testCases);
-        }
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
-        [TestCategory("10s")]
-        public void TestRun() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.TestAdapterATests.Concat(TestInfo.TestAdapterBTests).ToArray();
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-                Assert.IsTrue(actualResult.Duration >= expectedResult.MinDuration);
-            }
-        }
-
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
-        [TestCategory("10s")]
-        public void TestRunAll() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var tests = TestInfo.TestAdapterATests.Concat(TestInfo.TestAdapterBTests).ToArray();
-            var runContext = CreateRunContext(tests, Version.InterpreterPath);
-            var expectedTests = runContext.TestCases;
-
-            executor.RunTests(expectedTests, runContext, recorder);
-            PrintTestResults(recorder);
-
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in tests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-                Assert.IsTrue(actualResult.Duration >= expectedResult.MinDuration);
-            }
+            ExecuteTests(testEnv, runSettings, expectedTests.ToArray());
         }
 
         [TestMethod, Priority(0)]
-        public void TestCancel() {
-            var executor = new TestExecutor();
+        [TestCategory("10s")]
+        public void RunPytest() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_pt.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicPytest", "test_pt.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_pt_pass",
+                    "test_pt.py::test_pt::test_pt_pass",
+                    testFilePath,
+                    1,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "test_pt",
+                    pytestExecPathSuffix: "test_pt_pass"
+                ),
+                new TestInfo(
+                    "test_pt_fail",
+                    "test_pt.py::test_pt::test_pt_fail",
+                    testFilePath,
+                    4,
+                    outcome: TestOutcome.Failed,
+                    pytestXmlClassName: "test_pt",
+                    pytestExecPathSuffix: "test_pt_fail"
+                ),
+                new TestInfo(
+                    "test_method_pass",
+                    "test_pt.py::TestClassPT::test_method_pass",
+                    testFilePath,
+                    8,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "test_pt.TestClassPT"
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestUppercaseFileName() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_Uppercase.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Uppercase", "test_Uppercase.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo(
+                   "test_A", 
+                   "test_Uppercase.py::Test_UppercaseClass::test_A",
+                    testFilePath,
+                    4,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "test_Uppercase.Test_UppercaseClass"
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestSubpackages() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExecutor", "SubPackages"), testEnv.SourceFolderPath);
+
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "package1\\packageA\\test1.py");
+            var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "package1\\packageA\\test2.py");
+
+            var expectedTests = new[] {
+                new TestInfo(
+                   "test_A",
+                   "package1\\packageA\\test1.py::Test_test1::test_A",
+                    testFilePath1,
+                    4,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "package1.packageA.test1.Test_test1"
+                ),
+                 new TestInfo(
+                   "test_A",
+                   "package1\\packageA\\test2.py::Test_test2::test_A",
+                    testFilePath2,
+                    4,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "package1.packageA.test2.Test_test2"
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath1)
+                    .WithTestFile(testFilePath2)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestLargeTestCount() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            // Test that we don't try passing 1000 tests via command line arguments
+            // since that would exceed the 32k limit and fail.
+            var testContents = new StringBuilder();
+            var expectedTests = new List<TestInfo>();
+            var moduleName = "test_many";
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, $"{moduleName}.py");
+
+            for (int i = 0; i < 1000; i++) {
+                var funcName = $"test_func_{i}";
+                testContents.AppendLine($"def {funcName}(): pass");
+
+                expectedTests.Add(new TestInfo(
+                    funcName,
+                    $"{moduleName}.py::{moduleName}::{funcName}",
+                    testFilePath,
+                    i + 1,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: moduleName
+                ));
+            }
+
+            File.WriteAllText(testFilePath, testContents.ToString());
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests.ToArray());
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunUnittestCancel() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_cancel.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_cancel.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_sleep_1",
+                    "test_cancel.py::CancelTests::test_sleep_1",
+                    testFilePath,
+                    5,
+                    outcome: TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(0.1),
+                    pytestXmlClassName: "test_cancel.CancelTests"
+                ),
+                new TestInfo(
+                    "test_sleep_2",
+                    "test_cancel.py::CancelTests::test_sleep_2",
+                    testFilePath,
+                    8,
+                    outcome: TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(5),
+                    pytestXmlClassName: "test_cancel.CancelTests"
+                ),
+                new TestInfo(
+                    "test_sleep_3",
+                    "test_cancel.py::CancelTests::test_sleep_3",
+                    testFilePath,
+                    11,
+                    outcome: TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(5),
+                    pytestXmlClassName: "test_cancel.CancelTests"
+                ),
+                new TestInfo(
+                    "test_sleep_4",
+                    "test_cancel.py::CancelTests::test_sleep_4",
+                    testFilePath,
+                    14,
+                    outcome: TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(0.1),
+                    pytestXmlClassName: "test_cancel.CancelTests"
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
+            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.TestAdapterATests.Union(TestInfo.TestAdapterBTests).ToArray();
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
+            var executor = new TestExecutorUnitTest();
 
             var thread = new System.Threading.Thread(o => {
                 executor.RunTests(testCases, runContext, recorder);
             });
             thread.Start();
 
-            // One of the tests being run is hard coded to take 10 secs
+            // 2 of the tests being run are hard coded to take 5 secs
             Assert.IsTrue(thread.IsAlive);
 
             System.Threading.Thread.Sleep(100);
@@ -282,10 +367,13 @@ namespace TestAdapterTests {
             executor.Cancel();
             System.Threading.Thread.Sleep(100);
 
-            // It should take less than 10 secs to cancel
+            // Running all tests should take a bit more than 10 secs
+            // Worse case is we had time to start one of the 5 secs sleep test
+            // before we asked to cancel, but it definitely should take less
+            // than 10 secs because the other 5 secs sleep test should not run.
             // Depending on which assemblies are loaded, it may take some time
             // to obtain the interpreters service.
-            Assert.IsTrue(thread.Join(10000));
+            Assert.IsTrue(thread.Join(8000));
 
             System.Threading.Thread.Sleep(100);
 
@@ -295,140 +383,564 @@ namespace TestAdapterTests {
             Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
-        public void TestMultiprocessing() {
-            if (Version.Version <= PythonLanguageVersion.V26 ||
-                Version.Version == PythonLanguageVersion.V30) {
-                return;
-            }
+        public void RunUnittestRelativeImport() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.TestAdapterMultiprocessingTests;
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "RelativeImport"), testEnv.SourceFolderPath);
 
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "relativeimportpackage\\test_relative_import.py");
 
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-            }
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_relative_import",
+                    "relativeimportpackage\\test_relative_import.py::RelativeImportTests::test_relative_import",
+                    testFilePath,
+                    5,
+                    outcome: TestOutcome.Passed
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
-        public void TestRelativeImport() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = new[] { TestInfo.RelativeImportSuccess };
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
+        public void RunUnittestInheritance() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "Inheritance"), testEnv.SourceFolderPath);
 
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-            }
+            var baseTestFilePath = Path.Combine(testEnv.SourceFolderPath, "test_base.py");
+            var derivedTestFilePath = Path.Combine(testEnv.SourceFolderPath, "test_derived.py");
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_base_pass",
+                    "test_base.py::BaseClassTests::test_base_pass",
+                    baseTestFilePath,
+                    4,
+                    outcome: TestOutcome.Passed
+                ),
+                new TestInfo(
+                    "test_base_fail",
+                    "test_base.py::BaseClassTests::test_base_fail",
+                    baseTestFilePath,
+                    7,
+                    outcome: TestOutcome.Failed,
+                    containedErrorMessage: "Force a failure in base class code."
+                ),
+                new TestInfo(
+                    "test_base_pass",
+                    "test_derived.py::DerivedClassTests::test_base_pass",
+                    baseTestFilePath,
+                    4,
+                    TestOutcome.Passed
+                ),
+                new TestInfo(
+                    "test_base_fail",
+                    "test_derived.py::DerivedClassTests::test_base_fail",
+                    baseTestFilePath,
+                    7,
+                    outcome: TestOutcome.Failed,
+                    containedErrorMessage: "Force a failure in base class code."
+                ),
+                new TestInfo(
+                    "test_derived_pass",
+                    "test_derived.py::DerivedClassTests::test_derived_pass",
+                    derivedTestFilePath,
+                    5,
+                    outcome: TestOutcome.Passed
+                ),
+                new TestInfo(
+                    "test_derived_fail",
+                    "test_derived.py::DerivedClassTests::test_derived_fail",
+                    derivedTestFilePath,
+                    8,
+                    outcome: TestOutcome.Failed,
+                    containedErrorMessage: "Force a failure in derived class code."
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
-        public void TestInheritance() {
-            // TODO: Figure out the proper fix to make this test pass.
-            // There's a confusion between source file path and class file path.
-            // Note that the equivalent manual test in IDE works fine.
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.TestAdapterBInheritanceTests;
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-            }
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("10s")]
-        public void TestLoadError() {
+        public void RunUnittestImportError() {
             // A load error is when unittest module fails to load the test (prior to running it)
             // For example, if the file where the test is defined has an unhandled ImportError.
             // We check that this only causes the tests that can't be loaded to fail,
             // all other tests in the test run which can be loaded successfully will be run.
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.GetTestAdapterLoadErrorTests(ImportErrorFormat);
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ImportErrorUnittest"), testEnv.SourceFolderPath);
 
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_no_error.py");
+            var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_import_error.py");
 
-                if (expectedResult.ContainedErrorMessage != null) {
-                    Assert.IsNotNull(actualResult.ErrorMessage);
-                    Assert.IsTrue(
-                        actualResult.ErrorMessage.Contains(expectedResult.ContainedErrorMessage),
-                        string.Format("Error message did not contain expected text: {0}", expectedResult.ContainedErrorMessage)
-                    );
-                } else {
-                    Assert.IsNull(actualResult.ErrorMessage);
-                }
-            }
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_no_error",
+                    "test_no_error.py::NoErrorTests::test_no_error",
+                    testFilePath1,
+                    4,
+                    outcome: TestOutcome.Passed
+                ),
+                new TestInfo(
+                    "test_import_error",
+                    "test_import_error.py::ImportErrorTests::test_import_error",
+                    testFilePath2,
+                    5,
+                    outcome: TestOutcome.Failed
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
-        public void TestStackTrace() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
+        public void RunUnittestCoverage() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest, installCoverage: true);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExecutor", "Coverage"), testEnv.SourceFolderPath);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_coverage.py");
+
             var expectedTests = new[] {
-                TestInfo.StackTraceBadLocalImportFailure,
-                TestInfo.StackTraceNotEqualFailure
+                new TestInfo(
+                    "test_one",
+                    "test_coverage.py::TestCoverage::test_one",
+                    testFilePath,
+                    6,
+                    outcome: TestOutcome.Passed
+                ),
+                new TestInfo(
+                    "test_one",
+                    "test_coverage.py::TestCoverage::test_two",
+                    testFilePath,
+                    10,
+                    outcome: TestOutcome.Passed
+                ),
             };
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
+
+            var expectedCoverages = new[] {
+                new CoverageInfo(
+                    "test_coverage.py",
+                    new[] { 1, 3, 5, 6, 7, 8, 10, 11, 13, 16 }
+                ),
+                new CoverageInfo(
+                    "package1\\__init__.py",
+                    new[] { 1, 2, 3, 4, 5, 9, 10, 12 }
+                )
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath)
+                    .WithCoverage()
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests, expectedCoverages);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestCoverage() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest, installCoverage: true);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExecutor", "Coverage"), testEnv.SourceFolderPath);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_coverage.py");
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_one",
+                    "test_coverage.py::TestCoverage::test_one",
+                    testFilePath,
+                    6,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "test_coverage.TestCoverage"
+                ),
+                new TestInfo(
+                    "test_one",
+                    "test_coverage.py::TestCoverage::test_two",
+                    testFilePath,
+                    10,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "test_coverage.TestCoverage"
+                ),
+                new TestInfo(
+                    "test_global",
+                    "test_coverage.py::test_coverage::test_global",
+                    testFilePath,
+                    13,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "test_coverage",
+                    pytestExecPathSuffix: "test_global"
+                ),
+            };
+
+            var expectedCoverages = new[] {
+                new CoverageInfo(
+                    "test_coverage.py",
+                    new[] { 1, 3, 5, 6, 7, 8, 10, 11, 13, 14, 16 }
+                ),
+                new CoverageInfo(
+                    "package1\\__init__.py",
+                    new[] { 1, 2, 3, 4, 5, 9, 10, 12 }
+                )
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath)
+                    .WithCoverage()
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests, expectedCoverages);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunUnitTestStackTrace() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_stack_trace.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_stack_trace.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_bad_import",
+                    "test_stack_trace.py::StackTraceTests::test_bad_import",
+                    testFilePath,
+                    5,
+                    outcome: TestOutcome.Failed,
+                    stackFrames: new StackFrame[] {
+                        new StackFrame("local_func in global_func", testFilePath, 13),
+                        new StackFrame("global_func", testFilePath, 14),
+                        new StackFrame("Utility.class_static", testFilePath, 19),
+                        new StackFrame("Utility.instance_method_b", testFilePath, 22),
+                        new StackFrame("Utility.instance_method_a", testFilePath, 25),
+                        new StackFrame("StackTraceTests.test_bad_import", testFilePath, 6),
+                    }
+                ),
+                new TestInfo(
+                    "test_not_equal",
+                    "test_stack_trace.py::StackTraceTests::test_not_equal",
+                    testFilePath,
+                    8,
+                    outcome: TestOutcome.Failed,
+                    stackFrames: new StackFrame[] {
+                        new StackFrame("StackTraceTests.test_not_equal", testFilePath, 9),
+                    }
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestEnvironmentVariable() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_env_var.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_env_var.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_variable",
+                    "test_env_var.py::EnvironmentVariableTests::test_variable",
+                    testFilePath,
+                    5,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "test_env_var.EnvironmentVariableTests"
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .WithEnvironmentVariable("USER_ENV_VAR", "123")
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestDuration() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_duration.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_duration.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_sleep_0_1",
+                    "test_duration.py::DurationTests::test_sleep_0_1",
+                    testFilePath,
+                    5,
+                    outcome: TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(0.1),
+                    pytestXmlClassName: "test_duration.DurationTests"
+                ),
+                new TestInfo(
+                    "test_sleep_0_3",
+                    "test_duration.py::DurationTests::test_sleep_0_3",
+                    testFilePath,
+                    8,
+                    TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(0.3),
+                    pytestXmlClassName: "test_duration.DurationTests"
+                ),
+                new TestInfo(
+                    "test_sleep_0_5",
+                    "test_duration.py::DurationTests::test_sleep_0_5",
+                    testFilePath,
+                    11,
+                    TestOutcome.Failed,
+                    minDuration: TimeSpan.FromSeconds(0.5),
+                    pytestXmlClassName: "test_duration.DurationTests"
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunUnittestDuration() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_duration.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_duration.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_sleep_0_1",
+                    "test_duration.py::DurationTests::test_sleep_0_1",
+                    testFilePath,
+                    5,
+                    outcome: TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(0.1)
+                ),
+                new TestInfo(
+                    "test_sleep_0_3",
+                    "test_duration.py::DurationTests::test_sleep_0_3",
+                    testFilePath,
+                    8,
+                    outcome: TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(0.3)
+                ),
+                new TestInfo(
+                    "test_sleep_0_5",
+                    "test_duration.py::DurationTests::test_sleep_0_5",
+                    testFilePath,
+                    11,
+                    outcome: TestOutcome.Failed,
+                    minDuration: TimeSpan.FromSeconds(0.5)
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestSetupAndTeardown() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_teardown.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_teardown.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_success",
+                    "test_teardown.py::TeardownTests::test_success",
+                    testFilePath,
+                    10,
+                    outcome: TestOutcome.Passed,
+                    containedStdOut: new[] { "doing setUp", "doing tearDown" },
+                    pytestXmlClassName: "test_teardown.TeardownTests"
+                ),
+                new TestInfo(
+                    "test_failure",
+                    "test_teardown.py::TeardownTests::test_failure",
+                    testFilePath,
+                    13,
+                    outcome: TestOutcome.Failed,
+                    containedStdOut: new[] { "doing setUp", "doing tearDown" },
+                    pytestXmlClassName: "test_teardown.TeardownTests"
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestCodeFilePathNotFound() {
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder("pytest", "", "", "")
+                    .WithTestFile("DummyFilePath")
+                    .ToXml()
+            );
+
+            var differentDummyFilePath = "DifferentDummyFilePath";
+            var testCases = new List<TestCase>() { new TestCase("fakeTest", pt.Microsoft.PythonTools.PythonConstants.PytestExecutorUri, differentDummyFilePath) { CodeFilePath = differentDummyFilePath } };
+            var runContext = new MockRunContext(runSettings, testCases, "");
+            var recorder = new MockTestExecutionRecorder();
+            var executor = new TestExecutorPytest();
+            
+            //should not throw
+            executor.RunTests(testCases, runContext, recorder);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestNullCodeFilePath() {
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder("pytest", "", "", "")
+                    .WithTestFile("DummyFilePath")
+                    .ToXml()
+            );
+
+            var differentDummyFilePath = "DifferentDummyFilePath";
+            var testCases = new List<TestCase>() { new TestCase("fakeTest", pt.Microsoft.PythonTools.PythonConstants.PytestExecutorUri, differentDummyFilePath) { CodeFilePath = null } };
+            var runContext = new MockRunContext(runSettings, testCases, "");
+            var recorder = new MockTestExecutionRecorder();
+            var executor = new TestExecutorPytest();
+
+            //should not throw
+            executor.RunTests(testCases, runContext, recorder);
+        }
+
+        private static void ExecuteTests(TestEnvironment testEnv, MockRunSettings runSettings, TestInfo[] expectedTests, CoverageInfo[] expectedCoverages = null) {
+            var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
+            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
+            var recorder = new MockTestExecutionRecorder();
+
+            ITestExecutor executor = null;
+            switch (testEnv.TestFramework) {
+                case FrameworkPytest:
+                    executor = new TestExecutorPytest();
+                    break;
+
+                case FrameworkUnittest:
+                    executor = new TestExecutorUnitTest();
+                    break;
+                default:
+                    Assert.Fail();
+                    break;
+            }
 
             executor.RunTests(testCases, runContext, recorder);
 
-            var badLocalImportFile = TestInfo.StackTraceBadLocalImportFailure.SourceCodeFilePath;
-            var badLocalImportFrames = new StackFrame[] {
-                new StackFrame("local_func in global_func", badLocalImportFile, 13),
-                new StackFrame("global_func", badLocalImportFile, 14),
-                new StackFrame("Utility.class_static", badLocalImportFile, 19),
-                new StackFrame("Utility.instance_method_b", badLocalImportFile, 22),
-                new StackFrame("Utility.instance_method_a", badLocalImportFile, 25),
-                new StackFrame("StackTraceTests.test_bad_import", badLocalImportFile, 6),
-            };
+            ValidateExecutedTests(expectedTests, recorder);
+            ValidateCoverage(testEnv.SourceFolderPath, expectedCoverages, recorder);
+        }
 
-            ValidateStackFrame(recorder.Results[0], badLocalImportFrames);
+        private static List<TestCase> CreateTestCasesFromTestInfo(TestEnvironment testEnv, IEnumerable<TestInfo> expectedTests) {
+            return Enumerable.Select(expectedTests, ti => {
+                var testCase = new TestCase(ti.FullyQualifiedName, testEnv.ExecutionUri, ti.FilePath) {
+                    DisplayName = ti.DisplayName,
+                    CodeFilePath = ti.FilePath,
+                    LineNumber = ti.LineNumber,
+                };
 
-            var notEqualFile = TestInfo.StackTraceNotEqualFailure.SourceCodeFilePath;
-            var notEqualFrames = new StackFrame[] {
-                new StackFrame("StackTraceTests.test_not_equal", notEqualFile, 9),
-            };
+                string id = ".\\" + ti.FullyQualifiedName;
+                if (testEnv.TestFramework == FrameworkPytest) {
+                    var classParts = ti.PytestXmlClassName.Split('.');
+                    id = (classParts.Length > 1) ? id : ".\\" + Path.GetFileName(ti.FilePath) + "::" + ti.DisplayName;
+                }
+             
+                // FullyQualifiedName as exec path suffix only works for test class case,
+                // for standalone methods, specify the exec path suffix when creating TestInfo.
+                string execPath;
+                if (ti.PytestExecPathSuffix != null) {
+                    execPath = PathUtils.EnsureEndSeparator(ti.FilePath).ToLower() + "::" + ti.PytestExecPathSuffix;
+                } else {
+                    execPath = PathUtils.EnsureEndSeparator(testEnv.SourceFolderPath).ToLower() + ti.FullyQualifiedName;
+                }
 
-            ValidateStackFrame(recorder.Results[1], notEqualFrames);
+                testCase.SetPropertyValue<string>((TestProperty)Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestIdProperty, id);
+                return (TestCase)testCase;
+            }).ToList();
+        }
+
+        private static void ValidateExecutedTests(TestInfo[] expectedTests, MockTestExecutionRecorder recorder) {
+            PrintTestResults(recorder);
+
+            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
+            foreach (var expectedResult in expectedTests) {
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.FullyQualifiedName);
+                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.FullyQualifiedName);
+
+                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.FullyQualifiedName + " had incorrect result");
+                Assert.IsTrue(actualResult.Duration >= expectedResult.MinDuration, expectedResult.FullyQualifiedName + " had incorrect duration");
+
+                if (expectedResult.ContainedErrorMessage != null) {
+                    AssertUtil.Contains(actualResult.ErrorMessage, expectedResult.ContainedErrorMessage);
+                }
+
+                if (expectedResult.ContainedStdOut != null) {
+                    var stdOut = actualResult.Messages.Single(m => m.Category == "StdOutMsgs");
+                    AssertUtil.Contains(stdOut.Text, expectedResult.ContainedStdOut);
+                }
+
+                if (expectedResult.StackFrames != null) {
+                    ValidateStackFrame(actualResult, expectedResult.StackFrames);
+                }
+            }
         }
 
         private static void ValidateStackFrame(TestResult result, StackFrame[] expectedFrames) {
@@ -442,6 +954,81 @@ namespace TestAdapterTests {
             }
 
             CollectionAssert.AreEqual(expectedFrames, frames, new StackFrameComparer());
+        }
+
+        private static void PrintTestResults(MockTestExecutionRecorder recorder) {
+            Console.WriteLine("Messages:");
+            foreach (var message in recorder.Messages) {
+                Console.WriteLine(message);
+            }
+            Console.WriteLine("");
+
+            Console.WriteLine("Attachments:");
+            foreach (var attachment in recorder.Attachments) {
+                Console.WriteLine($"DisplayName: {attachment.DisplayName}");
+                Console.WriteLine($"Uri: {attachment.Uri}");
+                Console.WriteLine($"Count: {attachment.Attachments.Count}");
+                Console.WriteLine("");
+            }
+            Console.WriteLine("");
+
+            Console.WriteLine("Results:");
+            foreach (var result in recorder.Results) {
+                Console.WriteLine($"FullyQualifiedName: {result.TestCase.FullyQualifiedName}");
+                Console.WriteLine($"Outcome: {result.Outcome}");
+                Console.WriteLine($"Duration: {result.Duration.TotalMilliseconds}ms");
+                foreach (var msg in result.Messages) {
+                    Console.WriteLine($"Message {msg.Category}:");
+                    Console.WriteLine(msg.Text);
+                }
+                Console.WriteLine("");
+            }
+        }
+
+        private static void ValidateCoverage(string sourceDir, CoverageInfo[] expectedCoverages, MockTestExecutionRecorder recorder) {
+            var coverageAttachment = recorder.Attachments.SingleOrDefault(x => x.Uri == pt.Microsoft.PythonTools.PythonConstants.PythonCodeCoverageUri);
+            if (expectedCoverages != null) {
+                Assert.IsNotNull(coverageAttachment, "Coverage attachment not found");
+                Assert.AreEqual(1, coverageAttachment.Attachments.Count, "Expected 1 coverage data item");
+
+                var coverageItem = coverageAttachment.Attachments[0];
+                var coverageFilePath = coverageItem.Uri.LocalPath;
+                Assert.IsTrue(File.Exists(coverageFilePath), $"File path '{coverageFilePath}' does not exist");
+
+                ValidateCoverage(sourceDir, expectedCoverages, coverageFilePath);
+            } else {
+                Assert.IsNull(coverageAttachment, "Coverage attachment should not have been found");
+            }
+        }
+
+        private static void ValidateCoverage(string sourceDir, CoverageInfo[] expectedCoverages, string coverageFilePath) {
+            using (var stream = new FileStream(coverageFilePath, FileMode.Open, FileAccess.Read)) {
+                var converter = new CoveragePyConverter(sourceDir, stream);
+                var result = converter.Parse()
+                    .Where(fi => PathUtils.IsSubpathOf(sourceDir, fi.Filename))
+                    .ToArray();
+
+                Assert.AreEqual(expectedCoverages.Length, result.Length, "Unexpected number of files in coverage results");
+
+                foreach (var expectedInfo in expectedCoverages) {
+                    var filePath = Path.Combine(sourceDir, expectedInfo.FileName);
+                    var actual = result.SingleOrDefault(x => PathUtils.IsSamePath(x.Filename, filePath));
+                    Assert.IsNotNull(actual, $"Expected coverage result for '{filePath}'");
+
+                    AssertUtil.ContainsExactly(actual.Hits, expectedInfo.CoveredLines);
+                }
+            }
+        }
+
+        class CoverageInfo {
+            public CoverageInfo(string fileName, int[] coveredLines) {
+                FileName = fileName;
+                CoveredLines = coveredLines;
+            }
+
+            public string FileName { get; }
+
+            public int[] CoveredLines { get; }
         }
 
         class StackFrameComparer : IComparer {
@@ -479,128 +1066,6 @@ namespace TestAdapterTests {
                 return 0;
             }
         }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("10s")]
-        public void TestEnvironment() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = new[] { TestInfo.EnvironmentTestSuccess };
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-            }
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("10s")]
-        public void TestDuration() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = new[] {
-                TestInfo.DurationSleep01TestSuccess,
-                TestInfo.DurationSleep03TestSuccess,
-                TestInfo.DurationSleep05TestSuccess,
-                TestInfo.DurationSleep08TestSuccess,
-                TestInfo.DurationSleep15TestFailure
-            };
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-                Assert.IsTrue(actualResult.Duration >= expectedResult.MinDuration);
-            }
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("10s")]
-        public void TestTeardown() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = new[] {
-                TestInfo.TeardownSuccess,
-                TestInfo.TeardownFailure
-            };
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-                var stdOut = actualResult.Messages.Single(m => m.Category == "StdOutMsgs");
-                AssertUtil.Contains(stdOut.Text, "doing setUp", "doing tearDown");
-            }
-        }
-
-        [TestMethod, Priority(0)]
-        public void TestPassOnCommandLine() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.TestAdapterATests;
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath, dryRun: true);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            AssertUtil.ArrayEquals(
-                expectedTests.Select(t => t.TestCase.FullyQualifiedName).ToList(),
-                recorder.Results.Select(t => t.TestCase.FullyQualifiedName).ToList()
-            );
-        }
-
-        [TestMethod, Priority(0)]
-        public void TestPassInTestList() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = Enumerable.Repeat(TestInfo.TestAdapterATests, 10).SelectMany();
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath, dryRun: true);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            AssertUtil.ArrayEquals(
-                expectedTests.Select(t => t.TestCase.FullyQualifiedName).ToList(),
-                recorder.Results.Select(t => t.TestCase.FullyQualifiedName).ToList()
-            );
-        }
-
-        internal static void PrintTestResults(MockTestExecutionRecorder recorder) {
-            foreach (var message in recorder.Messages) {
-                Console.WriteLine(message);
-            }
-            foreach (var result in recorder.Results) {
-                Console.WriteLine("Test: {0}", result.TestCase.FullyQualifiedName);
-                Console.WriteLine("Result: {0}", result.Outcome);
-                Console.WriteLine("Duration: {0}ms", result.Duration.TotalMilliseconds);
-                foreach(var msg in result.Messages) {
-                    Console.WriteLine("Message {0}:", msg.Category);
-                    Console.WriteLine(msg.Text);
-                }
-                Console.WriteLine("");
-            }
-        }
     }
 
     [TestClass]
@@ -610,30 +1075,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;
-
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
-        [TestCategory("10s")]
-        public void TestExtensionReference() {
-            // This test uses a 32-bit Python 2.7 .pyd
-            PythonPaths.Python27.AssertInstalled();
-
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = new[] { TestInfo.ExtensionReferenceTestSuccess };
-            var runContext = CreateRunContext(expectedTests);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-            }
-        }
+        protected override PythonVersion Version => PythonPaths.Python27_x64 ?? PythonPaths.Python27;
     }
 
     [TestClass]
@@ -643,21 +1085,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python35 ?? PythonPaths.Python35_x64;
-
-        protected override string ImportErrorFormat => NewImportErrorFormat;
-    }
-
-    [TestClass]
-    public class TestExecutorTests36 : TestExecutorTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python36 ?? PythonPaths.Python36_x64;
-
-        protected override string ImportErrorFormat => NewImportErrorFormat;
+        protected override PythonVersion Version => PythonPaths.Python35_x64 ?? PythonPaths.Python35;
     }
 
     [TestClass]
@@ -667,8 +1095,6 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python37 ?? PythonPaths.Python37_x64;
-
-        protected override string ImportErrorFormat => NewImportErrorFormat;
+        protected override PythonVersion Version => PythonPaths.Python37_x64 ?? PythonPaths.Python37;
     }
 }

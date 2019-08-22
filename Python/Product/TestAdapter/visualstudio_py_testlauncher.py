@@ -19,6 +19,7 @@ from __future__ import with_statement
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
 
+import io
 import os.path
 import sys
 import json
@@ -38,13 +39,6 @@ try:
 except:
     from unittest import _TextTestResult as TextTestResult
     _IS_OLD_UNITTEST = True
-
-if sys.version_info[0] < 3:
-    if sys.version_info[:2] < (2, 6):
-        from codecs import open
-    else:
-        from io import open
-
 
 class _TestOutput(object):
     """file like object which redirects output to the repl window."""
@@ -177,6 +171,18 @@ class VsTestResult(TextTestResult):
         self._setResult(test, 'passed')
 
     def _setResult(self, test, outcome, trace = None):
+        # If a user runs the unit tests without debugging and then attaches to them using the legacy debugger (TCP or PID)
+        # Then the user will be able to debug this script. 
+        # After attaching the debugger, this script must add itself to the DONT_DEBUG list so it's not debugged. 
+        # Since this script doesn't know when the legacy debugger has been imported and attached, it's doing a check after every test
+        # This code will be removed when the legacy debugger is removed. 
+        # For more information, see https://github.com/microsoft/PTVS/pull/5447
+        if ("ptvsd" in sys.modules
+            and sys.modules["ptvsd"].__version__.startswith('3.') 
+            and os.path.normcase(__file__) not in sys.modules["ptvsd"].debugger.DONT_DEBUG):
+            sys.modules["ptvsd"].debugger.DEBUG_ENTRYPOINTS.add(sys.modules["ptvsd"].debugger.get_code(main))
+            sys.modules["ptvsd"].debugger.DONT_DEBUG.append(os.path.normcase(__file__))
+
         tb = None
         message = None
         duration = time.time() - self._start_time if self._start_time else 0
@@ -284,7 +290,7 @@ def main():
 
     all_tests = list(opts.tests or [])
     if opts.test_list:
-        with open(opts.test_list, 'r', encoding='utf-8') as test_list:
+        with io.open(opts.test_list, 'r', encoding='utf-8') as test_list:
             all_tests.extend(t.strip() for t in test_list)
 
     if opts.dry_run:

@@ -350,6 +350,7 @@ namespace PythonToolsTests {
             public event EventHandler InterpreterSettingChanged;
             public event EventHandler SearchPathsSettingChanged;
             public event EventHandler ActiveInterpreterChanged;
+            public event EventHandler TestSettingChanged;
 #pragma warning restore CS0067
 
             public void Dispose() {
@@ -402,6 +403,8 @@ namespace PythonToolsTests {
             public Task SetPropertyAsync(string propertyName, bool? propertyVal) {
                 throw new NotImplementedException();
             }
+
+            public IEnumerable<string> EnumerateUserFiles(Predicate<string> predicate) => throw new NotImplementedException();
         }
     }
 }

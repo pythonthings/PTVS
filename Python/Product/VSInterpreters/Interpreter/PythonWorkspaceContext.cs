@@ -29,6 +29,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string PythonSettingsType = "PythonSettings";
         private const string InterpreterProperty = "Interpreter";
         private const string SearchPathsProperty = "SearchPaths";
+        private const string TestFrameworkProperty = "TestFramework";
+        private const string UnitTestRootDirectoryProperty = "UnitTestRootDirectory";
+        private const string UnitTestPatternProperty = "UnitTestPattern";
 
         private readonly IWorkspace _workspace;
         private readonly IInterpreterOptionsService _optionsService;
@@ -43,6 +46,10 @@ namespace Microsoft.PythonTools.Interpreter {
         private object _cacheLock = new object();
         private string[] _searchPaths;
         private string _interpreter;
+        private string _testFramework;
+        private string _unitTestRootDirectory;
+        private string _unitTestPattern;
+
 
         // These are set in initialize
         private IPythonInterpreterFactory _factory;
@@ -61,6 +68,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler InterpreterSettingChanged;
 
         public event EventHandler SearchPathsSettingChanged;
+
+        public event EventHandler TestSettingChanged;
 
         /// <summary>
         /// The effective interpreter for this workspace has changed.
@@ -92,6 +101,9 @@ namespace Microsoft.PythonTools.Interpreter {
         public void Initialize() {
             _interpreter = ReadInterpreterSetting();
             _searchPaths = ReadSearchPathsSetting();
+            _testFramework = GetStringProperty(TestFrameworkProperty);
+            _unitTestRootDirectory = GetStringProperty(UnitTestRootDirectoryProperty);
+            _unitTestPattern = GetStringProperty(UnitTestPatternProperty);
 
             RefreshCurrentFactory();
 
@@ -143,6 +155,30 @@ namespace Microsoft.PythonTools.Interpreter {
         public IEnumerable<string> GetAbsoluteSearchPaths() {
             lock (_cacheLock) {
                 return new[] { "." }.Union(_searchPaths).Select(sp => PathUtils.GetAbsoluteDirectoryPath(_workspace.Location, sp));
+            }
+        }
+
+        public IEnumerable<string> EnumerateUserFiles(Predicate<string> predicate) {
+            var workspaceCacheDirPath = Path.Combine(_workspace.Location, ".vs");
+            var workspaceInterpreterConfigs = _registryService.Configurations
+                .Where(x => PathUtils.IsSubpathOf(_workspace.Location, x.InterpreterPath))
+                .ToList();
+
+            foreach (var file in Directory.EnumerateFiles(_workspace.Location).Where(x => predicate(x))) {
+                yield return file;
+            }
+
+            foreach (var topLevelDirectory in Directory.EnumerateDirectories(_workspace.Location)) {
+                if (!workspaceInterpreterConfigs.Any(x => PathUtils.IsSameDirectory(x.GetPrefixPath(), topLevelDirectory)) &&
+                    !PathUtils.IsSameDirectory(topLevelDirectory, workspaceCacheDirPath)
+                ) {
+                    foreach (var file in Directory
+                                .EnumerateFiles(topLevelDirectory, "*", SearchOption.AllDirectories)
+                                .Where(x => predicate(x))
+                    ) {
+                        yield return file;
+                    }
+                }
             }
         }
 
@@ -255,15 +291,30 @@ namespace Microsoft.PythonTools.Interpreter {
             // own changed events as applicable.
             bool interpreterChanged = false;
             bool searchPathsChanged = false;
+            bool testSettingsChanged = false;
+
             lock (_cacheLock) {
                 var oldInterpreter = _interpreter;
-                var oldSearchPaths = _searchPaths;
-
                 _interpreter = ReadInterpreterSetting();
+
+                var oldSearchPaths = _searchPaths;
                 _searchPaths = ReadSearchPathsSetting();
+
+                var oldTestFramework = _testFramework;
+                _testFramework = GetStringProperty(TestFrameworkProperty);
+
+                var oldUnitTestRootDirectory = _unitTestRootDirectory;
+                _unitTestRootDirectory = GetStringProperty(UnitTestRootDirectoryProperty);
+
+                var oldUnitTestPattern = _unitTestPattern;
+                _unitTestPattern = GetStringProperty(UnitTestPatternProperty);
 
                 interpreterChanged = oldInterpreter != _interpreter;
                 searchPathsChanged = !oldSearchPaths.SequenceEqual(_searchPaths);
+                testSettingsChanged =
+                    !String.Equals(oldTestFramework, _testFramework) ||
+                    !String.Equals(oldUnitTestRootDirectory, _unitTestRootDirectory) ||
+                    !String.Equals(oldUnitTestPattern, _unitTestPattern);
             }
 
             if (interpreterChanged) {
@@ -288,6 +339,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (searchPathsChanged) {
                 SearchPathsSettingChanged?.Invoke(this, EventArgs.Empty);
+            }
+
+            if (testSettingsChanged) {
+                TestSettingChanged?.Invoke(this, EventArgs.Empty);
             }
 
             return Task.CompletedTask;

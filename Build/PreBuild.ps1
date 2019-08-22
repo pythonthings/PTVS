@@ -59,7 +59,7 @@ try {
 
     "Downloading language server from CDN"
     $container = "python-language-server-daily"
-    $ver = "0.3.51" # important: keep in sync with Python\Product\Core\Properties\AssemblyInfo.cs
+    $ver = "0.3.61" # important: keep in sync with Python\Product\Core\Properties\AssemblyInfo.cs
     @("x86", "x64") | %{
         $filename = "Python-Language-Server-win-$_.$ver"
         Invoke-WebRequest "https://pvsc.azureedge.net/$container/$filename.nupkg" -OutFile "$outdir\$filename.zip"

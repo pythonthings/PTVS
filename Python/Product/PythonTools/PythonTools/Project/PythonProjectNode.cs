@@ -571,7 +571,7 @@ namespace Microsoft.PythonTools.Project {
                 // update our search paths.
                 string dirToAdd;
                 try {
-                    dirToAdd = ModulePath.FromFullPath(filename).LibraryPath;
+                    dirToAdd = Microsoft.Python.Analysis.Core.Interpreter.ModulePath.FromFullPath(filename).LibraryPath;
                 } catch (ArgumentException) {
                     dirToAdd = null;
                 }

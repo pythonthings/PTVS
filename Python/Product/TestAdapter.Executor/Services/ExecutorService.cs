@@ -24,7 +24,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Xml;
 using System.Xml.XPath;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.Python.Analysis.Core.Interpreter;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Utils;

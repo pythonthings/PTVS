@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Xml.XPath;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Pytest;

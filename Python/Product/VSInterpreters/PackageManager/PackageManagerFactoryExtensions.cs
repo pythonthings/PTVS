@@ -14,10 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.Python.Analysis.Core.Interpreter;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Python.Analysis.Core.Interpreter;
 
 namespace Microsoft.PythonTools.Interpreter {
     public static class PackageManagerFactoryExtensions {
@@ -35,20 +35,22 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            return await Task.Run(() => {
-                var configuration = factory.Configuration;
-                var prefixPath = configuration.GetPrefixPath();
-                var libraryPath = !string.IsNullOrEmpty(configuration.LibraryPath) ? configuration.LibraryPath : Path.Combine(prefixPath, "Lib");
-                var sitePackagesPath = !string.IsNullOrEmpty(configuration.SitePackagesPath) ? configuration.SitePackagesPath : Path.Combine(libraryPath, "site-packages");
-                var requiresInitPyFiles = ModulePath.PythonVersionRequiresInitPyFiles(configuration.Version);
-                foreach (var mp in ModulePath.GetModulesInLib(libraryPath, sitePackagesPath, requiresInitPyFiles)) {
-                    if (mp.ModuleName == moduleName) {
-                        return true;
-                    }
-                }
+            return false;
+            // LSC: ModulePath.GetModulesInLib disappeared
+            //return await Task.Run(() => {
+            //    var configuration = factory.Configuration;
+            //    var prefixPath = configuration.GetPrefixPath();
+            //    var libraryPath = !string.IsNullOrEmpty(configuration.LibraryPath) ? configuration.LibraryPath : Path.Combine(prefixPath, "Lib");
+            //    var sitePackagesPath = !string.IsNullOrEmpty(configuration.SitePackagesPath) ? configuration.SitePackagesPath : Path.Combine(libraryPath, "site-packages");
+            //    var requiresInitPyFiles = ModulePath.PythonVersionRequiresInitPyFiles(configuration.Version);
+            //    foreach (var mp in ModulePath.GetModulesInLib(libraryPath, sitePackagesPath, requiresInitPyFiles)) {
+            //        if (mp.ModuleName == moduleName) {
+            //            return true;
+            //        }
+            //    }
 
-                return false;
-            });
+            //    return false;
+            //});
         }
     }
 }

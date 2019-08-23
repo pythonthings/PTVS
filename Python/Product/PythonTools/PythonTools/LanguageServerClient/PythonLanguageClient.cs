@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             [Import] IInterpreterRegistryService registryService
         ) {
             // TODO: if this is a language client for a REPL window, we need to pass in the REPL evaluator to middle layer
-            MiddleLayer = new PythonLanguageClientMiddleLayer(null);
+            //MiddleLayer = new PythonLanguageClientMiddleLayer(null);
             CustomMessageTarget = new PythonLanguageClientCustomTarget(site);
             _site = site;
             _workspaceService = workspaceService;

@@ -14,63 +14,63 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.LanguageServer.Client;
-using Newtonsoft.Json.Linq;
+//using System;
+//using System.Threading.Tasks;
+//using Microsoft.VisualStudio.LanguageServer.Client;
+//using Newtonsoft.Json.Linq;
 
-namespace Microsoft.PythonTools.LanguageServerClient {
-    class PythonLanguageClientMiddleLayer : ILanguageClientMiddleLayer {
-        private readonly object _replEvaluator;
+//namespace Microsoft.PythonTools.LanguageServerClient {
+//    class PythonLanguageClientMiddleLayer : ILanguageClientMiddleLayer {
+//        private readonly object _replEvaluator;
 
-        public PythonLanguageClientMiddleLayer(object replEvaluator) {
-            _replEvaluator = replEvaluator;
-        }
+//        public PythonLanguageClientMiddleLayer(object replEvaluator) {
+//            _replEvaluator = replEvaluator;
+//        }
 
-        public bool CanHandle(string methodName) {
-            switch (methodName) {
-                case "textDocument/completion":
-                    return true;
-            }
+//        public bool CanHandle(string methodName) {
+//            switch (methodName) {
+//                case "textDocument/completion":
+//                    return true;
+//            }
 
-            return false;
-        }
+//            return false;
+//        }
 
-        public async Task<JToken> HandleRequestAsync(string methodName, JToken methodParam, Func<JToken, Task<JToken>> sendRequest) {
-            var result = await sendRequest(methodParam);
+//        public async Task<JToken> HandleRequestAsync(string methodName, JToken methodParam, Func<JToken, Task<JToken>> sendRequest) {
+//            var result = await sendRequest(methodParam);
 
-            switch (methodName) {
-                case "textDocument/completion":
-                    HandleCompletion(result);
-                    break;
-                default:
-                    break;
-            }
+//            switch (methodName) {
+//                case "textDocument/completion":
+//                    HandleCompletion(result);
+//                    break;
+//                default:
+//                    break;
+//            }
 
-            return result;
-        }
+//            return result;
+//        }
 
-        private void HandleCompletion(JToken serverCompletions) {
-            var jsonObj = (JObject)serverCompletions;
-            var items = (JArray)jsonObj.GetValue("items");
+//        private void HandleCompletion(JToken serverCompletions) {
+//            var jsonObj = (JObject)serverCompletions;
+//            var items = (JArray)jsonObj.GetValue("items");
 
-            // Example of modifying the server results (update labels)
-            foreach (JObject item in items) {
-                var label = (JValue)item["label"];
-                label.Value = label.Value + " PLS";
-            }
+//            // Example of modifying the server results (update labels)
+//            foreach (JObject item in items) {
+//                var label = (JValue)item["label"];
+//                label.Value = label.Value + " PLS";
+//            }
 
-            if (_replEvaluator != null) {
-                // call into repl evaluator to get completions from running python process
-                //var replObj = await _replEvaluator.GetCompletionsAsync();
-                //if (replObj != null) {
-                //    // TODO: merge REPL results with the ones from LS
-                //}
-            }
-        }
+//            if (_replEvaluator != null) {
+//                // call into repl evaluator to get completions from running python process
+//                //var replObj = await _replEvaluator.GetCompletionsAsync();
+//                //if (replObj != null) {
+//                //    // TODO: merge REPL results with the ones from LS
+//                //}
+//            }
+//        }
 
-        public Task HandleNotificationAsync(string methodName, JToken methodParam, Func<JToken, Task> sendNotification) {
-            return Task.CompletedTask;
-        }
-    }
-}
+//        public Task HandleNotificationAsync(string methodName, JToken methodParam, Func<JToken, Task> sendNotification) {
+//            return Task.CompletedTask;
+//        }
+//    }
+//}

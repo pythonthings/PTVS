@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
@@ -38,14 +39,16 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     /// <remarks>
     /// See documentation at https://docs.microsoft.com/en-us/visualstudio/extensibility/adding-an-lsp-extension?view=vs-2019
     /// </remarks>
-    [ContentType(PythonCoreConstants.ContentType)]
-    [Export(typeof(ILanguageClient))]
+    //[ContentType(PythonCoreConstants.ContentType)]
+    //[Export(typeof(ILanguageClient))]
     class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2 {
         private readonly IServiceProvider _site;
         private readonly IVsFolderWorkspaceService _workspaceService;
         private readonly IInterpreterOptionsService _optionsService;
         private readonly IInterpreterRegistryService _registryService;
         private JsonRpc _rpc;
+
+        private static readonly List<PythonLanguageClient> _languageClients = new List<PythonLanguageClient>();
 
         [ImportingConstructor]
         public PythonLanguageClient(
@@ -64,6 +67,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public string Name => "Python Language Extension";
+
+        public string ClientName { get; set; }
 
         public IEnumerable<string> ConfigurationSections {
             get {
@@ -183,5 +188,28 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public async Task<string> SendServerCustomMessageAsync(string test) {
             return await _rpc.InvokeAsync<string>("OnCustomRequest", test);
         }
+
+        public static async Task EnsureLanguageClient(
+            IServiceProvider site,
+            IVsFolderWorkspaceService workspaceService,
+            IInterpreterOptionsService optionsService,
+            IInterpreterRegistryService registryService,
+            ILanguageClientBroker broker,
+            string clientName
+        ) {
+            PythonLanguageClient client = null;
+            lock (_languageClients) {
+                if (!_languageClients.Any(lc => lc.ClientName == clientName)) {
+                    client = new PythonLanguageClient(site, workspaceService, optionsService, registryService);
+                    client.ClientName = clientName;
+                    _languageClients.Add(client);
+                }
+            }
+
+            if (client != null) {
+                await broker.LoadAsync(new PythonLanguageClientMetadata(clientName), client);
+            }
+        }
+
     }
 }

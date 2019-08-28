@@ -38,9 +38,9 @@ using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    [Export(typeof(IWpfTextViewConnectionListener))]
-    [ContentType(PythonCoreConstants.ContentType)]
-    [TextViewRole(PredefinedTextViewRoles.Document)]
+    //[Export(typeof(IWpfTextViewConnectionListener))]
+    //[ContentType(PythonCoreConstants.ContentType)]
+    //[TextViewRole(PredefinedTextViewRoles.Document)]
     class WpfTextViewConnectionListener : IWpfTextViewConnectionListener, IDisposable {
         internal const string BufferContentChangedSubscriptionCount = "Python_ContentChangedSubscriptionCount";
         public const string DocumentPathProperty = "PythonDocumentPath";

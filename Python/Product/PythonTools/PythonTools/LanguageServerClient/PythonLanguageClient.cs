@@ -137,10 +137,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 // we need to read from the workspace settings in order to populate this correctly
                 // (or from the project)
                 interpreter = new PythonInitializationOptions.Interpreter {
-                    properties = new Dictionary<string, object> {
-                        { "InterpreterPath", interpreterPath },
-                        { "Version", interpreterVersion },
-                        { "DatabasePath", PythonLanguageClientStartInfo.DatabaseFolderPath }
+                    properties = new PythonInitializationOptions.Interpreter.InterpreterProperties {
+                        InterpreterPath = interpreterPath,
+                        Version = interpreterVersion,
+                        DatabasePath = PythonLanguageClientStartInfo.DatabaseFolderPath,
                     }
                 },
                 searchPaths = searchPaths.ToArray(),

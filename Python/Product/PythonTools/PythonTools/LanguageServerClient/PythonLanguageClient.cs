@@ -27,6 +27,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
@@ -239,5 +240,18 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
+        public static PythonLanguageClient FindLanguageClient(string clientName) {
+            lock (_languageClients) {
+                return _languageClients.SingleOrDefault(lc => lc.ClientName == clientName);
+            }
+        }
+
+        public static PythonLanguageClient FindLanguageClient(ITextBuffer textBuffer) {
+            if (textBuffer.Properties.TryGetProperty(LanguageClientConstants.ClientNamePropertyKey, out string name)) {
+                return FindLanguageClient(name);
+            }
+
+            return null;
+        }
     }
 }

@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
@@ -46,6 +47,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly IVsFolderWorkspaceService _workspaceService;
         private readonly IInterpreterOptionsService _optionsService;
         private readonly IInterpreterRegistryService _registryService;
+        private readonly PythonProjectNode _project;
         private JsonRpc _rpc;
 
         private static readonly List<PythonLanguageClient> _languageClients = new List<PythonLanguageClient>();
@@ -56,6 +58,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             [Import] IVsFolderWorkspaceService workspaceService,
             [Import] IInterpreterOptionsService optionsService,
             [Import] IInterpreterRegistryService registryService
+        ) : this(site, workspaceService, optionsService, registryService, null) {
+        }
+
+        public PythonLanguageClient(
+            IServiceProvider site,
+            IVsFolderWorkspaceService workspaceService,
+            IInterpreterOptionsService optionsService,
+            IInterpreterRegistryService registryService,
+            PythonProjectNode project
         ) {
             // TODO: if this is a language client for a REPL window, we need to pass in the REPL evaluator to middle layer
             //MiddleLayer = new PythonLanguageClientMiddleLayer(null);
@@ -64,6 +75,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _workspaceService = workspaceService;
             _optionsService = optionsService;
             _registryService = registryService;
+            _project = project;
         }
 
         public string Name => "Python Language Extension";
@@ -116,22 +128,37 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public async Task OnLoadedAsync() {
             var workspace = _workspaceService.CurrentWorkspace;
-            var workspaceFolder = workspace.Location;
 
             // Force initialization of python tools service by requesting it
             _site.GetPythonToolsService();
 
             string interpreterPath = string.Empty;
             string interpreterVersion = string.Empty;
-            var factory = workspace.GetInterpreterFactory(_registryService, _optionsService);
-            if (factory != null) {
-                interpreterPath = factory.Configuration.InterpreterPath;
-                interpreterVersion = factory.Configuration.Version.ToString();
-            }
-
-            // VSCode captures the python.exe env variables, uses PYTHONPATH to build this list
             var searchPaths = new List<string>();
-            searchPaths.AddRange(workspace.GetAbsoluteSearchPaths());
+
+            if (_project != null) {
+                var factory = _project.ActiveInterpreter;
+                if (factory != null) {
+                    interpreterPath = factory.Configuration.InterpreterPath;
+                    interpreterVersion = factory.Configuration.Version.ToString();
+                }
+
+                searchPaths.AddRange(_project._searchPaths.GetAbsoluteSearchPaths());
+            } else if (workspace != null) {
+                var workspaceFolder = workspace.Location;
+
+                var factory = workspace.GetInterpreterFactory(_registryService, _optionsService);
+                if (factory != null) {
+                    interpreterPath = factory.Configuration.InterpreterPath;
+                    interpreterVersion = factory.Configuration.Version.ToString();
+                }
+
+                // VSCode captures the python.exe env variables, uses PYTHONPATH to build this list
+                searchPaths.AddRange(workspace.GetAbsoluteSearchPaths());
+            } else {
+                // TODO: loose python file
+                return;
+            }
 
             InitializationOptions = new PythonInitializationOptions {
                 // we need to read from the workspace settings in order to populate this correctly
@@ -195,12 +222,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             IInterpreterOptionsService optionsService,
             IInterpreterRegistryService registryService,
             ILanguageClientBroker broker,
-            string clientName
+            string clientName,
+            PythonProjectNode project
         ) {
             PythonLanguageClient client = null;
             lock (_languageClients) {
                 if (!_languageClients.Any(lc => lc.ClientName == clientName)) {
-                    client = new PythonLanguageClient(site, workspaceService, optionsService, registryService);
+                    client = new PythonLanguageClient(site, workspaceService, optionsService, registryService, project);
                     client.ClientName = clientName;
                     _languageClients.Add(client);
                 }

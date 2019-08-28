@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -62,9 +63,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _registryService = componentModel.GetService<IInterpreterRegistryService>();
             _broker = componentModel.GetService<ILanguageClientBroker>();
 
-            var names = HandleLoadedDocuments();
-            foreach (var name in names) {
-                EnsureLanguageClient(name);
+            var nameToProjectMap = HandleLoadedDocuments();
+            foreach (var kv in nameToProjectMap) {
+                EnsureLanguageClient(kv.Key, kv.Value);
             }
         }
 
@@ -86,9 +87,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public int OnBeforeDocumentWindowShow(uint docCookie, int fFirstShow, IVsWindowFrame pFrame) {
             if (fFirstShow != 0) {
-                var name = HandleDocument(docCookie);
+                var (name, project) = HandleDocument(docCookie);
                 if (!string.IsNullOrEmpty(name)) {
-                    EnsureLanguageClient(name);
+                    EnsureLanguageClient(name, project);
                 }
             }
 
@@ -99,26 +100,27 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return VSConstants.S_OK;
         }
 
-        private string[] HandleLoadedDocuments() {
-            var names = new HashSet<string>();
+        private IDictionary<string, PythonProjectNode> HandleLoadedDocuments() {
+            var nameToProjectMap = new Dictionary<string, PythonProjectNode>();
 
             if (ErrorHandler.Succeeded(_runDocTable.GetRunningDocumentsEnum(out var pEnumRdt))) {
                 if (ErrorHandler.Succeeded(pEnumRdt.Reset())) {
                     uint[] cookie = new uint[1];
                     while (VSConstants.S_OK == pEnumRdt.Next(1, cookie, out _)) {
-                        var name = HandleDocument(cookie[0]);
+                        var (name, project) = HandleDocument(cookie[0]);
                         if (!string.IsNullOrEmpty(name)) {
-                            names.Add(name);
+                            nameToProjectMap[name] = project;
                         }
                     }
                 }
             }
 
-            return names.ToArray();
+            return nameToProjectMap;
         }
 
-        private string HandleDocument(uint docCookie) {
+        private (string, PythonProjectNode) HandleDocument(uint docCookie) {
             string name = null;
+            PythonProjectNode project = null;
 
             var res = _runDocTable.GetDocumentInfo(docCookie, out _, out _, out _, out var path, out var hier, out var item, out var docDataPtr);
             if (res == VSConstants.S_OK) {
@@ -136,6 +138,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                             if (contentType.IsOfType(PythonCoreConstants.ContentType)) {
                                 if (!textBuffer.Properties.TryGetProperty(LanguageClientConstants.ClientNamePropertyKey, out name)) {
                                     name = hier.GetNameProperty();
+                                    project = hier.GetPythonProject();
                                     textBuffer.Properties.AddProperty(LanguageClientConstants.ClientNamePropertyKey, name);
                                 }
                             }
@@ -148,17 +151,18 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 }
             }
 
-            return name;
+            return (name, project);
         }
 
-        private void EnsureLanguageClient(string name) {
+        private void EnsureLanguageClient(string name, PythonProjectNode project) {
             PythonLanguageClient.EnsureLanguageClient(
                 _site,
                 _workspaceService,
                 _optionsService,
                 _registryService,
                 _broker,
-                name
+                name,
+                project
             ).HandleAllExceptions(_site, GetType()).DoNotWait();
         }
     }

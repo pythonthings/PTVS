@@ -23,8 +23,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools.Project {
-    //[DefaultRegistryRoot("Software\\Microsoft\\VisualStudio\\9.0Exp")]
-    //[PackageRegistration(UseManagedResourcesOnly = true)]
     public abstract class CommonProjectPackage : ProjectPackage, IVsInstalledProduct, IOleComponent {
         private IOleComponentManager _compMgr;
         private uint _componentID;
@@ -68,15 +66,20 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             base.Initialize();
+
             RegisterProjectFactory(CreateProjectFactory());
-            var editFactory = CreateEditorFactory();
-            if (editFactory != null) {
-                RegisterEditorFactory(editFactory);
-            }
-            var encodingEditorFactory = CreateEditorFactoryPromptForEncoding();
-            if (encodingEditorFactory != null) {
-                RegisterEditorFactory(encodingEditorFactory);
-            }
+
+            // LSC
+            //var editFactory = CreateEditorFactory();
+            //if (editFactory != null) {
+            //    RegisterEditorFactory(editFactory);
+            //}
+
+            //var encodingEditorFactory = CreateEditorFactoryPromptForEncoding();
+            //if (encodingEditorFactory != null) {
+            //    RegisterEditorFactory(encodingEditorFactory);
+            //}
+
             var componentManager = _compMgr = (IOleComponentManager)GetService(typeof(SOleComponentManager));
             OLECRINFO[] crinfo = new OLECRINFO[1];
             crinfo[0].cbSize = (uint)Marshal.SizeOf(typeof(OLECRINFO));

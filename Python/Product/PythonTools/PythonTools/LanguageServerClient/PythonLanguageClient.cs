@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Core.Disposables;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
@@ -43,13 +44,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     /// </remarks>
     //[ContentType(PythonCoreConstants.ContentType)]
     //[Export(typeof(ILanguageClient))]
-    class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2 {
+    class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2, IDisposable {
         private readonly IServiceProvider _site;
         private readonly IVsFolderWorkspaceService _workspaceService;
         private readonly IInterpreterOptionsService _optionsService;
         private readonly IInterpreterRegistryService _registryService;
         private readonly PythonProjectNode _project;
         private JsonRpc _rpc;
+        private DisposableBag _disposables;
 
         private static readonly List<PythonLanguageClient> _languageClients = new List<PythonLanguageClient>();
 
@@ -69,14 +71,89 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             IInterpreterRegistryService registryService,
             PythonProjectNode project
         ) {
+            _site = site ?? throw new ArgumentNullException(nameof(site));
+            _workspaceService = workspaceService ?? throw new ArgumentNullException(nameof(workspaceService));
+            _optionsService = optionsService ?? throw new ArgumentNullException(nameof(optionsService));
+            _registryService = registryService ?? throw new ArgumentNullException(nameof(registryService));
+            _project = project;
+
+            _disposables = new DisposableBag(GetType().Name);
+
+            _workspaceService.OnActiveWorkspaceChanged += OnActiveWorkspaceChanged;
+            _disposables.Add(() => {
+                _workspaceService.OnActiveWorkspaceChanged -= OnActiveWorkspaceChanged;
+            });
+
             // TODO: if this is a language client for a REPL window, we need to pass in the REPL evaluator to middle layer
             //MiddleLayer = new PythonLanguageClientMiddleLayer(null);
             CustomMessageTarget = new PythonLanguageClientCustomTarget(site);
-            _site = site;
-            _workspaceService = workspaceService;
-            _optionsService = optionsService;
-            _registryService = registryService;
-            _project = project;
+        }
+
+        public static async Task EnsureLanguageClient(
+            IServiceProvider site,
+            IVsFolderWorkspaceService workspaceService,
+            IInterpreterOptionsService optionsService,
+            IInterpreterRegistryService registryService,
+            ILanguageClientBroker broker,
+            string clientName,
+            PythonProjectNode project
+        ) {
+            if (clientName == null) {
+                throw new ArgumentNullException(nameof(clientName));
+            }
+
+            PythonLanguageClient client = null;
+            lock (_languageClients) {
+                if (!_languageClients.Any(lc => lc.ClientName == clientName)) {
+                    client = new PythonLanguageClient(site, workspaceService, optionsService, registryService, project);
+                    client.ClientName = clientName;
+                    _languageClients.Add(client);
+                }
+            }
+
+            if (client != null) {
+                await broker.LoadAsync(new PythonLanguageClientMetadata(clientName), client);
+            }
+        }
+
+        public static PythonLanguageClient FindLanguageClient(string clientName) {
+            if (clientName == null) {
+                throw new ArgumentNullException(nameof(clientName));
+            }
+
+            lock (_languageClients) {
+                return _languageClients.SingleOrDefault(lc => lc.ClientName == clientName);
+            }
+        }
+
+        public static PythonLanguageClient FindLanguageClient(ITextBuffer textBuffer) {
+            if (textBuffer == null) {
+                throw new ArgumentNullException(nameof(textBuffer));
+            }
+
+            if (textBuffer.Properties.TryGetProperty(LanguageClientConstants.ClientNamePropertyKey, out string name)) {
+                return FindLanguageClient(name);
+            }
+
+            return null;
+        }
+
+        public static void StopLanguageClient(string clientName) {
+            if (clientName == null) {
+                throw new ArgumentNullException(nameof(clientName));
+            }
+
+            PythonLanguageClient client = null;
+            lock (_languageClients) {
+                client = _languageClients.SingleOrDefault(lc => lc.ClientName == clientName);
+                if (client != null) {
+                    _languageClients.Remove(client);
+                }
+            }
+
+            if (client != null) {
+                client.StopAsync?.Invoke(client, EventArgs.Empty);
+            }
         }
 
         public string Name => "Python Language Extension";
@@ -133,8 +210,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // Force initialization of python tools service by requesting it
             _site.GetPythonToolsService();
 
-            string interpreterPath = string.Empty;
-            string interpreterVersion = string.Empty;
+            var interpreterPath = string.Empty;
+            var interpreterVersion = string.Empty;
             var searchPaths = new List<string>();
 
             if (_project != null) {
@@ -142,9 +219,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 if (factory != null) {
                     interpreterPath = factory.Configuration.InterpreterPath;
                     interpreterVersion = factory.Configuration.Version.ToString();
+                    searchPaths.AddRange(_project._searchPaths.GetAbsoluteSearchPaths());
                 }
-
-                searchPaths.AddRange(_project._searchPaths.GetAbsoluteSearchPaths());
             } else if (workspace != null) {
                 var workspaceFolder = workspace.Location;
 
@@ -152,12 +228,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 if (factory != null) {
                     interpreterPath = factory.Configuration.InterpreterPath;
                     interpreterVersion = factory.Configuration.Version.ToString();
+                    // VSCode captures the python.exe env variables, uses PYTHONPATH to build this list
+                    searchPaths.AddRange(workspace.GetAbsoluteSearchPaths());
                 }
-
-                // VSCode captures the python.exe env variables, uses PYTHONPATH to build this list
-                searchPaths.AddRange(workspace.GetAbsoluteSearchPaths());
             } else {
                 // TODO: loose python file
+            }
+
+            if (string.IsNullOrEmpty(interpreterPath) || string.IsNullOrEmpty(interpreterVersion)) {
                 return;
             }
 
@@ -217,41 +295,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return await _rpc.InvokeAsync<string>("OnCustomRequest", test);
         }
 
-        public static async Task EnsureLanguageClient(
-            IServiceProvider site,
-            IVsFolderWorkspaceService workspaceService,
-            IInterpreterOptionsService optionsService,
-            IInterpreterRegistryService registryService,
-            ILanguageClientBroker broker,
-            string clientName,
-            PythonProjectNode project
-        ) {
-            PythonLanguageClient client = null;
-            lock (_languageClients) {
-                if (!_languageClients.Any(lc => lc.ClientName == clientName)) {
-                    client = new PythonLanguageClient(site, workspaceService, optionsService, registryService, project);
-                    client.ClientName = clientName;
-                    _languageClients.Add(client);
-                }
-            }
-
-            if (client != null) {
-                await broker.LoadAsync(new PythonLanguageClientMetadata(clientName), client);
-            }
+        public void Dispose() {
+            _disposables.TryDispose();
         }
 
-        public static PythonLanguageClient FindLanguageClient(string clientName) {
-            lock (_languageClients) {
-                return _languageClients.SingleOrDefault(lc => lc.ClientName == clientName);
-            }
-        }
-
-        public static PythonLanguageClient FindLanguageClient(ITextBuffer textBuffer) {
-            if (textBuffer.Properties.TryGetProperty(LanguageClientConstants.ClientNamePropertyKey, out string name)) {
-                return FindLanguageClient(name);
-            }
-
-            return null;
+        private Task OnActiveWorkspaceChanged(object sender, EventArgs e) {
+            // TODO: determine if we need to stop this language server client
+            // we also need to restart language server when things like search path, active interpreter are changing
+            return Task.CompletedTask;
         }
     }
 }

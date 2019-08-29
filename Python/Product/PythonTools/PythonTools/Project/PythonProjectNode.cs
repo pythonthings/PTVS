@@ -34,6 +34,7 @@ using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.PythonTools.Logging;
 // LSC
 //using Microsoft.PythonTools.Navigation;
@@ -42,9 +43,11 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using IServiceProvider = System.IServiceProvider;
@@ -741,11 +744,38 @@ namespace Microsoft.PythonTools.Project {
                 _searchPaths.LoadPathsFromString(ProjectHome, GetProjectProperty(PythonConstants.SearchPathSetting, false));
             }
 
+            StartLanguageClient().HandleAllExceptions(Site, GetType()).DoNotWait();
+
             // LSC
             //ReanalyzeProject(ActiveInterpreter)
             //    .HandleAllExceptions(Site, GetType(), allowUI: false)
             //    .DoNotWait();
 
+        }
+
+        private Task StartLanguageClient() {
+            return PythonLanguageClient.EnsureLanguageClient(
+                Site,
+                Site.GetComponentModel().GetService<IVsFolderWorkspaceService>(),
+                Site.GetComponentModel().GetService<IInterpreterOptionsService>(),
+                Site.GetComponentModel().GetService<IInterpreterRegistryService>(),
+                Site.GetComponentModel().GetService<ILanguageClientBroker>(),
+                Name,
+                this
+            );
+        }
+
+        private Task RestartLanguageClient() {
+            PythonLanguageClient.StopLanguageClient(Name);
+            return PythonLanguageClient.EnsureLanguageClient(
+                Site,
+                Site.GetComponentModel().GetService<IVsFolderWorkspaceService>(),
+                Site.GetComponentModel().GetService<IInterpreterOptionsService>(),
+                Site.GetComponentModel().GetService<IInterpreterRegistryService>(),
+                Site.GetComponentModel().GetService<ILanguageClientBroker>(),
+                Name,
+                this
+            );
         }
 
         public override void OnOpenItem(string fullPathToSourceFile) {
@@ -956,6 +986,7 @@ namespace Microsoft.PythonTools.Project {
                 RefreshSearchPaths()
             );
 
+            RestartLanguageClient().HandleAllExceptions(Site, GetType()).DoNotWait();
             // Update analyzer
             // LSC
             //UpdateAnalyzerSearchPaths();
@@ -987,6 +1018,7 @@ namespace Microsoft.PythonTools.Project {
             } else if (!_searchPaths.AddOrReplace(moniker, absolutePath, false)) {
                 // Didn't change a search path, so we need to trigger reanalysis
                 // manually.
+                RestartLanguageClient().HandleAllExceptions(Site, GetType()).DoNotWait();
                 // LSC
                 //UpdateAnalyzerSearchPaths();
             }
@@ -1100,6 +1132,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
+                PythonLanguageClient.StopLanguageClient(Name);
                 // LSC
                 //if (_analyzer != null) {
                 //    UnHookErrorsAndWarnings(_analyzer);
@@ -1399,7 +1432,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var factory = ActiveInterpreter;
+            RestartLanguageClient().HandleAllExceptions(Site, GetType()).DoNotWait();
 
             // LSC
             //Site.GetUIThread().InvokeTask(async () => {
@@ -1416,14 +1449,14 @@ namespace Microsoft.PythonTools.Project {
         //    });
         //}
 
-//        private async Task ReanalyzeProject(IPythonInterpreterFactory factory) {
-//#if DEBUG
-//            var output = OutputWindowRedirector.GetGeneral(Site);
-//            await ReanalyzeProjectHelper(factory, output);
-//#else
-//            await ReanalyzeProjectHelper(factory, null);
-//#endif
-//        }
+        //        private async Task ReanalyzeProject(IPythonInterpreterFactory factory) {
+        //#if DEBUG
+        //            var output = OutputWindowRedirector.GetGeneral(Site);
+        //            await ReanalyzeProjectHelper(factory, output);
+        //#else
+        //            await ReanalyzeProjectHelper(factory, null);
+        //#endif
+        //        }
 
         //private async Task ReanalyzeProjectHelper(IPythonInterpreterFactory factory, Redirector log) {
         //    if (IsClosing || IsClosed) {

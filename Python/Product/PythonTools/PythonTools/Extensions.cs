@@ -55,6 +55,7 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 using Microsoft.Python.Analysis.Types;
+using Microsoft.PythonTools.LanguageServerClient;
 
 namespace Microsoft.PythonTools {
     static class Extensions {
@@ -386,16 +387,10 @@ namespace Microsoft.PythonTools {
                 return evaluator.LanguageVersion;
             }
 
-            // LSC
-            //var entry = textView.TextBuffer.TryGetAnalysisEntry();
-            //if (entry?.Analyzer != null) {
-            //    return entry.Analyzer.LanguageVersion;
-            //}
-
-            //var analyzer = await serviceProvider.FindAnalyzerAsync(textView);
-            //if (analyzer is VsProjectAnalyzer pyAnalyzer) {
-            //    return pyAnalyzer.LanguageVersion;
-            //}
+            var client = PythonLanguageClient.FindLanguageClient(textView.TextBuffer);
+            if (client?.Factory != null) {
+                return client.Factory.Configuration.Version.ToLanguageVersion();
+            }
 
             var defaultInterp = serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
             if (defaultInterp?.Configuration != null) {
@@ -408,9 +403,12 @@ namespace Microsoft.PythonTools {
             return PythonLanguageVersion.None;
         }
 
-        // LSC
-        // TODO: this needs to actually get the correct interpreter factory
         internal static IPythonInterpreterFactory GetInterpreterFactoryAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
+            var client = PythonLanguageClient.FindLanguageClient(textView.TextBuffer);
+            if (client?.Factory != null) {
+                return client.Factory;
+            }
+
             return serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
         }
 

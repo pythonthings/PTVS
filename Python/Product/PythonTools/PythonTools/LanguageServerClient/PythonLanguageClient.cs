@@ -156,9 +156,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
-        public string Name => "Python Language Extension";
-
         public string ClientName { get; set; }
+
+        public IPythonInterpreterFactory Factory { get; private set; }
+
+        public string Name => "Python Language Extension";
 
         public IEnumerable<string> ConfigurationSections {
             get {
@@ -215,19 +217,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var searchPaths = new List<string>();
 
             if (_project != null) {
-                var factory = _project.ActiveInterpreter;
-                if (factory != null) {
-                    interpreterPath = factory.Configuration.InterpreterPath;
-                    interpreterVersion = factory.Configuration.Version.ToString();
+                Factory = _project.ActiveInterpreter;
+                if (Factory != null) {
+                    interpreterPath = Factory.Configuration.InterpreterPath;
+                    interpreterVersion = Factory.Configuration.Version.ToString();
                     searchPaths.AddRange(_project._searchPaths.GetAbsoluteSearchPaths());
                 }
             } else if (workspace != null) {
                 var workspaceFolder = workspace.Location;
 
-                var factory = workspace.GetInterpreterFactory(_registryService, _optionsService);
-                if (factory != null) {
-                    interpreterPath = factory.Configuration.InterpreterPath;
-                    interpreterVersion = factory.Configuration.Version.ToString();
+                Factory = workspace.GetInterpreterFactory(_registryService, _optionsService);
+                if (Factory != null) {
+                    interpreterPath = Factory.Configuration.InterpreterPath;
+                    interpreterVersion = Factory.Configuration.Version.ToString();
                     // VSCode captures the python.exe env variables, uses PYTHONPATH to build this list
                     searchPaths.AddRange(workspace.GetAbsoluteSearchPaths());
                 }

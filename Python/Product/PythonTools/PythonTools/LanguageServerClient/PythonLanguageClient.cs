@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Python.Core.Disposables;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.LanguageServer.Client;
@@ -49,6 +50,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly IVsFolderWorkspaceService _workspaceService;
         private readonly IInterpreterOptionsService _optionsService;
         private readonly IInterpreterRegistryService _registryService;
+        private readonly ILanguageClientBroker _broker;
         private readonly PythonProjectNode _project;
         private JsonRpc _rpc;
         private DisposableBag _disposables;
@@ -60,8 +62,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             [Import(typeof(SVsServiceProvider))] IServiceProvider site,
             [Import] IVsFolderWorkspaceService workspaceService,
             [Import] IInterpreterOptionsService optionsService,
-            [Import] IInterpreterRegistryService registryService
-        ) : this(site, workspaceService, optionsService, registryService, null) {
+            [Import] IInterpreterRegistryService registryService,
+            [Import] ILanguageClientBroker broker
+        ) : this(site, workspaceService, optionsService, registryService, broker, null) {
         }
 
         public PythonLanguageClient(
@@ -69,18 +72,22 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             IVsFolderWorkspaceService workspaceService,
             IInterpreterOptionsService optionsService,
             IInterpreterRegistryService registryService,
+            ILanguageClientBroker broker,
             PythonProjectNode project
         ) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _workspaceService = workspaceService ?? throw new ArgumentNullException(nameof(workspaceService));
             _optionsService = optionsService ?? throw new ArgumentNullException(nameof(optionsService));
             _registryService = registryService ?? throw new ArgumentNullException(nameof(registryService));
+            _broker = broker ?? throw new ArgumentNullException(nameof(broker));
             _project = project;
 
             _disposables = new DisposableBag(GetType().Name);
 
+            _optionsService.DefaultInterpreterChanged += OnDefaultInterpreterChanged;
             _workspaceService.OnActiveWorkspaceChanged += OnActiveWorkspaceChanged;
             _disposables.Add(() => {
+                _optionsService.DefaultInterpreterChanged -= OnDefaultInterpreterChanged;
                 _workspaceService.OnActiveWorkspaceChanged -= OnActiveWorkspaceChanged;
             });
 
@@ -105,7 +112,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             PythonLanguageClient client = null;
             lock (_languageClients) {
                 if (!_languageClients.Any(lc => lc.ClientName == clientName)) {
-                    client = new PythonLanguageClient(site, workspaceService, optionsService, registryService, project);
+                    client = new PythonLanguageClient(site, workspaceService, optionsService, registryService, broker, project);
                     client.ClientName = clientName;
                     _languageClients.Add(client);
                 }
@@ -234,7 +241,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     searchPaths.AddRange(workspace.GetAbsoluteSearchPaths());
                 }
             } else {
-                // TODO: loose python file
+                Factory = _optionsService.DefaultInterpreter;
+                if (Factory != null) {
+                    interpreterPath = Factory.Configuration.InterpreterPath;
+                    interpreterVersion = Factory.Configuration.Version.ToString();
+                }
             }
 
             if (string.IsNullOrEmpty(interpreterPath) || string.IsNullOrEmpty(interpreterVersion)) {
@@ -299,6 +310,23 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public void Dispose() {
             _disposables.TryDispose();
+        }
+
+        private void OnDefaultInterpreterChanged(object sender, EventArgs e) {
+            if (_optionsService.DefaultInterpreter == Factory) {
+                return;
+            }
+
+            StopLanguageClient(ClientName);
+            EnsureLanguageClient(
+                _site,
+                _workspaceService,
+                _optionsService,
+                _registryService,
+                _broker,
+                ClientName,
+                null
+            ).HandleAllExceptions(_site, GetType()).DoNotWait();
         }
 
         private Task OnActiveWorkspaceChanged(object sender, EventArgs e) {

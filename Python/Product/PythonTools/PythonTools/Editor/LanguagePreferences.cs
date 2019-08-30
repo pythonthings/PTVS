@@ -98,20 +98,22 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         public int OnUserPreferencesChanged2(VIEWPREFERENCES2[] viewPrefs, FRAMEPREFERENCES2[] framePrefs, LANGPREFERENCES2[] langPrefs, FONTCOLORPREFERENCES2[] colorPrefs) {
-            int hr = VSConstants.S_OK;
+            // LSC
+            //int hr = VSConstants.S_OK;
             if (langPrefs != null && langPrefs.Length > 0 && langPrefs[0].guidLang == this._preferences.guidLang) {
                 _preferences.IndentStyle = langPrefs[0].IndentStyle;
                 _preferences.fAutoListMembers = langPrefs[0].fAutoListMembers;
                 _preferences.fAutoListParams = langPrefs[0].fAutoListParams;
                 _preferences.fHideAdvancedAutoListMembers = langPrefs[0].fHideAdvancedAutoListMembers;
-                if (_preferences.fDropdownBar != (_preferences.fDropdownBar = langPrefs[0].fDropdownBar)) {
-                    foreach(var window in _service.CodeWindowManagers) {
-                        hr = window.ToggleNavigationBar(_preferences.fDropdownBar != 0);
-                        if (ErrorHandler.Failed(hr)) {
-                            break;
-                        }
-                    }
-                }
+                // LSC
+                //if (_preferences.fDropdownBar != (_preferences.fDropdownBar = langPrefs[0].fDropdownBar)) {
+                //    foreach(var window in _service.CodeWindowManagers) {
+                //        hr = window.ToggleNavigationBar(_preferences.fDropdownBar != 0);
+                //        if (ErrorHandler.Failed(hr)) {
+                //            break;
+                //        }
+                //    }
+                //}
             }
             return VSConstants.S_OK;
         }

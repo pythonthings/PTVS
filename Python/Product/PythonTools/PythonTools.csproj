@@ -281,6 +281,8 @@
     <Compile Include="PythonTools\Commands\CurrentEnvironmentCommand.cs" />
     <Compile Include="PythonTools\Commands\SwitchToEnvironmentCommand.cs" />
     <Compile Include="PythonTools\Editor\EditorExtensions.cs" />
+    <Compile Include="PythonTools\Editor\LanguagePreferences.cs" />
+    <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentSwitcherFileContext.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentSwitcherProjectContext.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentSwitcherWorkspaceContext.cs" />

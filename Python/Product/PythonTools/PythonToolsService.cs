@@ -31,8 +31,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
-// LSC
-//using Microsoft.PythonTools.Navigation;
+using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
@@ -51,8 +50,7 @@ namespace Microsoft.PythonTools {
     /// </summary>
     public sealed class PythonToolsService : IDisposable {
         private readonly IServiceContainer _container;
-        // LSC
-        //private readonly Lazy<LanguagePreferences> _langPrefs;
+        private readonly Lazy<LanguagePreferences> _langPrefs;
         private IPythonToolsOptionsService _optionsService;
         private Lazy<IInterpreterOptionsService> _interpreterOptionsService;
         private Lazy<IInterpreterRegistryService> _interpreterRegistryService;
@@ -97,7 +95,7 @@ namespace Microsoft.PythonTools {
             // LSC
             //_analyzers = new ConcurrentDictionary<string, VsProjectAnalyzer>();
 
-            //_langPrefs = new Lazy<LanguagePreferences>(() => new LanguagePreferences(this, typeof(PythonLanguageInfo).GUID));
+            _langPrefs = new Lazy<LanguagePreferences>(() => new LanguagePreferences(this, typeof(PythonLanguageInfo).GUID));
             _interpreterOptionsService = new Lazy<IInterpreterOptionsService>(Site.GetComponentModel().GetService<IInterpreterOptionsService>);
             _interpreterRegistryService = new Lazy<IInterpreterRegistryService>(Site.GetComponentModel().GetService<IInterpreterRegistryService>);
 
@@ -137,10 +135,9 @@ namespace Microsoft.PythonTools {
         }
 
         public void Dispose() {
-            // LSC
-            //if (_langPrefs.IsValueCreated) {
-            //    _langPrefs.Value.Dispose();
-            //}
+            if (_langPrefs.IsValueCreated) {
+                _langPrefs.Value.Dispose();
+            }
 
             _idleManager.Dispose();
 
@@ -464,8 +461,7 @@ namespace Microsoft.PythonTools {
 
         internal System.IServiceProvider Site => _container;
 
-        // LSC
-        //internal LanguagePreferences LangPrefs => _langPrefs.Value;
+        internal LanguagePreferences LangPrefs => _langPrefs.Value;
 
         /// <summary>
         /// Ensures the shell is loaded before returning language preferences,
@@ -476,13 +472,13 @@ namespace Microsoft.PythonTools {
         /// Should only be called from the UI thread, and you must not
         /// synchronously wait on the returned task.
         /// </remarks>
-        //internal async Task<LanguagePreferences> GetLangPrefsAsync() {
-        //    if (_langPrefs.IsValueCreated) {
-        //        return _langPrefs.Value;
-        //    }
-        //    await _container.WaitForShellInitializedAsync();
-        //    return _langPrefs.Value;
-        //}
+        internal async Task<LanguagePreferences> GetLangPrefsAsync() {
+            if (_langPrefs.IsValueCreated) {
+                return _langPrefs.Value;
+            }
+            await _container.WaitForShellInitializedAsync();
+            return _langPrefs.Value;
+        }
 
         #region Registry Persistance
 

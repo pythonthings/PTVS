@@ -754,28 +754,16 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private Task StartLanguageClient() {
-            return PythonLanguageClient.EnsureLanguageClient(
+            return PythonLanguageClient.EnsureLanguageClientAsync(
                 Site,
-                Site.GetComponentModel().GetService<IVsFolderWorkspaceService>(),
-                Site.GetComponentModel().GetService<IInterpreterOptionsService>(),
-                Site.GetComponentModel().GetService<IInterpreterRegistryService>(),
-                Site.GetComponentModel().GetService<ILanguageClientBroker>(),
-                Name,
-                this
+                this,
+                Name
             );
         }
 
         private Task RestartLanguageClient() {
             PythonLanguageClient.StopLanguageClient(Name);
-            return PythonLanguageClient.EnsureLanguageClient(
-                Site,
-                Site.GetComponentModel().GetService<IVsFolderWorkspaceService>(),
-                Site.GetComponentModel().GetService<IInterpreterOptionsService>(),
-                Site.GetComponentModel().GetService<IInterpreterRegistryService>(),
-                Site.GetComponentModel().GetService<ILanguageClientBroker>(),
-                Name,
-                this
-            );
+            return StartLanguageClient();
         }
 
         public override void OnOpenItem(string fullPathToSourceFile) {

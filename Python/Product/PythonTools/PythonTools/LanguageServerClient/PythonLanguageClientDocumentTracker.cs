@@ -155,14 +155,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void EnsureLanguageClient(string name, PythonProjectNode project) {
-            PythonLanguageClient.EnsureLanguageClient(
+            PythonLanguageClient.EnsureLanguageClientAsync(
                 _site,
                 _workspaceService,
                 _optionsService,
                 _registryService,
                 _broker,
                 name,
-                project
+                project,
+                null
             ).HandleAllExceptions(_site, GetType()).DoNotWait();
         }
     }

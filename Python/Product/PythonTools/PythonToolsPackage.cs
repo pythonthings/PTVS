@@ -93,11 +93,10 @@ namespace Microsoft.PythonTools {
     [ProvideOptionPage(typeof(PythonCondaOptionsPage), "Python Tools", "Conda", 115, 132, true)]
     [ProvideOptionPage(typeof(LanguageServerOptionsPage), "Python Tools", "Language Server", 115, 131, false)]
     [Guid(GuidList.guidPythonToolsPkgString)]              // our packages GUID
-    // LSC
-    //[ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
-    //[ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
-    //[ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.WindowsFileExtension)]
-    //[ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.StubFileExtension)]
+    [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
+    [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
+    [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.WindowsFileExtension)]
+    [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.StubFileExtension)]
     [ProvideDebugEngine(AD7Engine.DebugEngineName, typeof(AD7ProgramProvider), typeof(AD7Engine), AD7Engine.DebugEngineId, hitCountBp: true)]
     [ProvideDebugAdapter("VSCode Python Debugger", DebugAdapterLauncher.VSCodeDebugEngineId, DebugAdapterLauncher.DebugAdapterLauncherCLSID, CustomDebugAdapterProtocolExtension.CustomProtocolExtensionCLSID, "Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", typeof(DebugAdapterLauncher), typeof(CustomDebugAdapterProtocolExtension))]
     [ProvideDebugLanguage("Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", PythonExpressionEvaluatorGuid, AD7Engine.DebugEngineId)]

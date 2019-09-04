@@ -285,10 +285,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             if (_replWindow != null) {
                 var evaluator = _replWindow.Evaluator as PythonCommonInteractiveEvaluator;
+                if (_replWindow.Evaluator is SelectableReplEvaluator selEvaluator) {
+                    evaluator = selEvaluator.Evaluator as PythonCommonInteractiveEvaluator;
+                }
+
                 if (evaluator != null) {
-                    interpreterPath = evaluator.Configuration.InterpreterPath;
+                    interpreterPath = evaluator.Configuration.Interpreter.InterpreterPath;
                     interpreterVersion = evaluator.LanguageVersion.ToVersion().ToString();
-                    searchPaths.AddRange(evaluator.Configuration.SearchPaths); // TODO: are these absolute?
+                    searchPaths.AddRange(evaluator.Configuration.SearchPaths);
                 }
             } else if (_project != null) {
                 Factory = _project.ActiveInterpreter;

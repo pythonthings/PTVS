@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Shell;
@@ -394,6 +395,13 @@ namespace Microsoft.PythonTools.Repl {
         public OverloadDoc[] GetSignatureDocumentation(string text) {
             return (_evaluator as IPythonInteractiveIntellisense)?.GetSignatureDocumentation(text)
                 ?? new OverloadDoc[0];
+        }
+
+        public async Task InitializeLanguageServerAsync() {
+            var evaluator = _evaluator as PythonCommonInteractiveEvaluator;
+            if (evaluator != null) {
+                await evaluator.InitializeLanguageServerAsync();
+            }
         }
     }
 }

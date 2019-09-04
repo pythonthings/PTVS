@@ -20,14 +20,18 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(InteractiveWindowProvider))]
@@ -153,14 +157,13 @@ namespace Microsoft.PythonTools.Repl {
                 curId = GetNextId();
             }
 
+            var evaluator = new SelectableReplEvaluator(_serviceProvider, _evaluators, replId, curId.ToString());
             var window = CreateInteractiveWindowInternal(
-                new SelectableReplEvaluator(_serviceProvider, _evaluators, replId, curId.ToString()),
+                evaluator,
                 _pythonContentType,
                 true,
                 curId,
                 Strings.ReplCaptionNoEvaluator,
-                // LSC
-                //typeof(Navigation.PythonLanguageInfo).GUID,
                 GuidList.guidPythonLanguageServiceGuid,
                 "PythonInteractive"
             );
@@ -177,6 +180,8 @@ namespace Microsoft.PythonTools.Repl {
                     _lruWindows.Remove(window);
                 }
             };
+
+            _serviceProvider.GetUIThread().InvokeTaskSync(() => evaluator.InitializeLanguageServerAsync(), CancellationToken.None);
 
             return window;
         }
@@ -219,8 +224,6 @@ namespace Microsoft.PythonTools.Repl {
                 false,
                 curId,
                 title,
-                // LSC
-                //typeof(Navigation.PythonLanguageInfo).GUID,
                 GuidList.guidPythonLanguageServiceGuid,
                 replId
             );

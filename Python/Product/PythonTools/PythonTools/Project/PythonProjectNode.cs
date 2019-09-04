@@ -744,7 +744,7 @@ namespace Microsoft.PythonTools.Project {
                 _searchPaths.LoadPathsFromString(ProjectHome, GetProjectProperty(PythonConstants.SearchPathSetting, false));
             }
 
-            StartLanguageClient().HandleAllExceptions(Site, GetType()).DoNotWait();
+            Site.GetUIThread().InvokeTaskSync(async () => StartLanguageClient(), CancellationToken.None);
 
             // LSC
             //ReanalyzeProject(ActiveInterpreter)
@@ -970,11 +970,11 @@ namespace Microsoft.PythonTools.Project {
 
         private void SearchPaths_Changed(object sender, EventArgs e) {
             // Update solution explorer
-            Site.GetUIThread().InvokeAsync(() =>
-                RefreshSearchPaths()
-            );
+            Site.GetUIThread().InvokeAsync(() => {
+                RefreshSearchPaths();
+                RestartLanguageClient();
+            });
 
-            RestartLanguageClient().HandleAllExceptions(Site, GetType()).DoNotWait();
             // Update analyzer
             // LSC
             //UpdateAnalyzerSearchPaths();
@@ -1006,7 +1006,7 @@ namespace Microsoft.PythonTools.Project {
             } else if (!_searchPaths.AddOrReplace(moniker, absolutePath, false)) {
                 // Didn't change a search path, so we need to trigger reanalysis
                 // manually.
-                RestartLanguageClient().HandleAllExceptions(Site, GetType()).DoNotWait();
+                Site.GetUIThread().InvokeTaskSync(async () => RestartLanguageClient(), CancellationToken.None);
                 // LSC
                 //UpdateAnalyzerSearchPaths();
             }
@@ -1420,7 +1420,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            RestartLanguageClient().HandleAllExceptions(Site, GetType()).DoNotWait();
+            Site.GetUIThread().InvokeTaskSync(async () => RestartLanguageClient(), CancellationToken.None);
 
             // LSC
             //Site.GetUIThread().InvokeTask(async () => {

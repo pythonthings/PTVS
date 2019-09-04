@@ -28,10 +28,12 @@ using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -101,6 +103,7 @@ namespace Microsoft.PythonTools.Repl {
             if (disposing) {
                 // LSC
                 //_analyzer?.Dispose();
+                PythonLanguageClient.StopLanguageClient(_documentUri.ToString());
             }
         }
 
@@ -132,6 +135,17 @@ namespace Microsoft.PythonTools.Repl {
         internal bool AssociatedProjectHasChanged { get; set; }
 
         internal bool AssociatedWorkspaceHasChanged { get; set; }
+
+        internal async Task InitializeLanguageServerAsync() {
+            var textBuffer = _window.CurrentLanguageBuffer;
+            textBuffer.Properties[LanguageClientConstants.ClientNamePropertyKey] = _documentUri.ToString();
+
+            await PythonLanguageClient.EnsureLanguageClientAsync(
+                _serviceProvider,
+                _window,
+                _documentUri.ToString()
+            );
+        }
 
         private PythonProjectNode GetAssociatedPythonProject(InterpreterConfiguration interpreter = null) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThread();

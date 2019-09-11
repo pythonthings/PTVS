@@ -15,16 +15,20 @@
 // permissions and limitations under the License.
 
 using Microsoft.VisualStudio.LanguageServer.Client;
+using Microsoft.VisualStudio.Utilities;
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     class PythonLanguageClientMetadata : ILanguageClientMetadata {
-        public PythonLanguageClientMetadata(string clientName) {
+        public PythonLanguageClientMetadata(string clientName, string contentTypeName) {
             ClientName = clientName;
+            ContentType = contentTypeName;
         }
 
         public string ClientName { get; }
 
-        public IEnumerable<string> ContentTypes => new[] { PythonCoreConstants.ContentType };
+        public string ContentType { get; }
+
+        public IEnumerable<string> ContentTypes => new[] { ContentType };
     }
 }

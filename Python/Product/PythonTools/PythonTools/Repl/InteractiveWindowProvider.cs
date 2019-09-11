@@ -48,8 +48,8 @@ namespace Microsoft.PythonTools.Repl {
 
         private readonly IServiceProvider _serviceProvider;
         private readonly IInteractiveEvaluatorProvider[] _evaluators;
+        private readonly IContentTypeRegistryService _contentTypeService;
         private readonly IVsInteractiveWindowFactory _windowFactory;
-        private readonly IContentType _pythonContentType;
 
         private static readonly object VsInteractiveWindowKey = new object();
 
@@ -64,8 +64,8 @@ namespace Microsoft.PythonTools.Repl {
         ) {
             _serviceProvider = serviceProvider;
             _evaluators = evaluators;
+            _contentTypeService = contentTypeService;
             _windowFactory = factory;
-            _pythonContentType = contentTypeService.GetContentType(PythonCoreConstants.ContentType);
         }
 
         public IEnumerable<IVsInteractiveWindow> AllOpenWindows {
@@ -157,10 +157,11 @@ namespace Microsoft.PythonTools.Repl {
                 curId = GetNextId();
             }
 
+            var contentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(_contentTypeService, curId.ToString());
             var evaluator = new SelectableReplEvaluator(_serviceProvider, _evaluators, replId, curId.ToString());
             var window = CreateInteractiveWindowInternal(
                 evaluator,
-                _pythonContentType,
+                contentType,
                 true,
                 curId,
                 Strings.ReplCaptionNoEvaluator,
@@ -181,7 +182,10 @@ namespace Microsoft.PythonTools.Repl {
                 }
             };
 
-            _serviceProvider.GetUIThread().InvokeTaskSync(() => evaluator.InitializeLanguageServerAsync(), CancellationToken.None);
+            _serviceProvider.GetUIThread().InvokeTaskSync(
+                () => evaluator.InitializeLanguageServerAsync(curId),
+                CancellationToken.None
+            );
 
             return window;
         }
@@ -218,9 +222,10 @@ namespace Microsoft.PythonTools.Repl {
 
             int curId = GetNextId();
 
+            var contentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(_contentTypeService, curId.ToString());
             var window = CreateInteractiveWindowInternal(
                 _evaluators.Select(p => p.GetEvaluator(replId)).FirstOrDefault(e => e != null),
-                _pythonContentType,
+                contentType,
                 false,
                 curId,
                 title,

@@ -397,10 +397,10 @@ namespace Microsoft.PythonTools.Repl {
                 ?? new OverloadDoc[0];
         }
 
-        public async Task InitializeLanguageServerAsync() {
+        public async Task InitializeLanguageServerAsync(int curId) {
             var evaluator = _evaluator as PythonCommonInteractiveEvaluator;
             if (evaluator != null) {
-                await evaluator.InitializeLanguageServerAsync();
+                await evaluator.InitializeLanguageServerAsync(curId);
             }
         }
     }

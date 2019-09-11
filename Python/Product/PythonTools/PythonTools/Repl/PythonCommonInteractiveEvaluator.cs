@@ -103,7 +103,9 @@ namespace Microsoft.PythonTools.Repl {
             if (disposing) {
                 // LSC
                 //_analyzer?.Dispose();
-                PythonLanguageClient.StopLanguageClient(_documentUri.ToString());
+                if (ContentType != null) {
+                    PythonLanguageClient.StopLanguageClient(ContentType.TypeName);
+                }
             }
         }
 
@@ -136,14 +138,20 @@ namespace Microsoft.PythonTools.Repl {
 
         internal bool AssociatedWorkspaceHasChanged { get; set; }
 
-        internal async Task InitializeLanguageServerAsync() {
+        private IContentType ContentType { get; set; }
+
+        internal async Task InitializeLanguageServerAsync(int curId) {
             var textBuffer = _window.CurrentLanguageBuffer;
             textBuffer.Properties[LanguageClientConstants.ClientNamePropertyKey] = _documentUri.ToString();
+
+            var contentTypeService = _serviceProvider.GetComponentModel().GetService<IContentTypeRegistryService>();
+            var contentTypeName = PythonFilePathToContentTypeProvider.GetContentTypeNameForREPL(curId);
+            ContentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(contentTypeService, contentTypeName);
 
             await PythonLanguageClient.EnsureLanguageClientAsync(
                 _serviceProvider,
                 _window,
-                _documentUri.ToString()
+                ContentType.TypeName
             );
         }
 

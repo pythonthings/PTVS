@@ -186,7 +186,6 @@ namespace Microsoft.PythonTools {
         private PythonAutomation _autoObject;
         private PackageContainer _packageContainer;
         private DisposableBag _disposables;
-        private readonly PythonLanguageClientDocumentTracker _documentTracker;
         internal const string PythonExpressionEvaluatorGuid = "{D67D5DB8-3D44-4105-B4B8-47AB1BA66180}";
 
         /// <summary>
@@ -198,8 +197,6 @@ namespace Microsoft.PythonTools {
         /// </summary>
         public PythonToolsPackage() {
             _disposables = new DisposableBag(GetType().Name, "Package is disposed");
-            _documentTracker = new PythonLanguageClientDocumentTracker();
-            _disposables.Add(_documentTracker);
 
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
 
@@ -531,8 +528,6 @@ namespace Microsoft.PythonTools {
             // The variable is inherited by child processes backing Test Explorer, and is used in PTVS
             // test discoverer and test executor to connect back to VS.
             Environment.SetEnvironmentVariable("_PTVS_PID", Process.GetCurrentProcess().Id.ToString());
-
-            _documentTracker.Initialize(this);
 
             Trace.WriteLine("Leaving Initialize() of: {0}".FormatUI(this));
         }

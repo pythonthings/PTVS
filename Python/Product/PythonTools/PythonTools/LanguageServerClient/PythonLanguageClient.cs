@@ -61,18 +61,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private static readonly List<PythonLanguageClient> _languageClients = new List<PythonLanguageClient>();
 
-        [ImportingConstructor]
-        public PythonLanguageClient(
-            [Import(typeof(SVsServiceProvider))] IServiceProvider site,
-            [Import] IVsFolderWorkspaceService workspaceService,
-            [Import] IInterpreterOptionsService optionsService,
-            [Import] IInterpreterRegistryService registryService,
-            [Import] ILanguageClientBroker broker
-        ) : this(site, workspaceService, optionsService, registryService, broker, null, null) {
-        }
+        //[ImportingConstructor]
+        //public PythonLanguageClient(
+        //    [Import(typeof(SVsServiceProvider))] IServiceProvider site,
+        //    [Import] IVsFolderWorkspaceService workspaceService,
+        //    [Import] IInterpreterOptionsService optionsService,
+        //    [Import] IInterpreterRegistryService registryService,
+        //    [Import] ILanguageClientBroker broker
+        //) : this(site, PythonCoreConstants.ContentType, workspaceService, optionsService, registryService, broker, null, null) {
+        //}
 
         public PythonLanguageClient(
             IServiceProvider site,
+            string contentTypeName,
             IVsFolderWorkspaceService workspaceService,
             IInterpreterOptionsService optionsService,
             IInterpreterRegistryService registryService,
@@ -81,6 +82,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             IInteractiveWindow replWindow
         ) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
+            ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
             _workspaceService = workspaceService ?? throw new ArgumentNullException(nameof(workspaceService));
             _optionsService = optionsService ?? throw new ArgumentNullException(nameof(optionsService));
             _registryService = registryService ?? throw new ArgumentNullException(nameof(registryService));
@@ -101,13 +103,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             CustomMessageTarget = new PythonLanguageClientCustomTarget(site);
         }
 
-        public static async Task EnsureLanguageClientAsync(IServiceProvider serviceProvider, IInteractiveWindow replWindow, string clientName) {
+        public static async Task EnsureLanguageClientAsync(
+            IServiceProvider serviceProvider,
+            IInteractiveWindow replWindow,
+            string contentTypeName
+        ) {
             if (serviceProvider == null) {
                 throw new ArgumentNullException(nameof(serviceProvider));
             }
 
-            if (clientName == null) {
-                throw new ArgumentNullException(nameof(clientName));
+            if (contentTypeName == null) {
+                throw new ArgumentNullException(nameof(contentTypeName));
             }
 
             var componentModel = serviceProvider.GetComponentModel();
@@ -122,19 +128,23 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 optionsService,
                 registryService,
                 broker,
-                clientName,
+                contentTypeName,
                 null,
                 replWindow
             );
         }
 
-        public static async Task EnsureLanguageClientAsync(IServiceProvider serviceProvider, PythonProjectNode project, string clientName) {
+        public static async Task EnsureLanguageClientAsync(
+            IServiceProvider serviceProvider,
+            PythonProjectNode project,
+            string contentTypeName
+        ) {
             if (serviceProvider == null) {
                 throw new ArgumentNullException(nameof(serviceProvider));
             }
 
-            if (clientName == null) {
-                throw new ArgumentNullException(nameof(clientName));
+            if (contentTypeName == null) {
+                throw new ArgumentNullException(nameof(contentTypeName));
             }
 
             var componentModel = serviceProvider.GetComponentModel();
@@ -149,7 +159,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 optionsService,
                 registryService,
                 broker,
-                clientName,
+                contentTypeName,
                 project,
                 null
             );
@@ -161,35 +171,34 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             IInterpreterOptionsService optionsService,
             IInterpreterRegistryService registryService,
             ILanguageClientBroker broker,
-            string clientName,
+            string contentTypeName,
             PythonProjectNode project,
             IInteractiveWindow replWindow
         ) {
-            if (clientName == null) {
-                throw new ArgumentNullException(nameof(clientName));
+            if (contentTypeName == null) {
+                throw new ArgumentNullException(nameof(contentTypeName));
             }
 
             PythonLanguageClient client = null;
             lock (_languageClients) {
-                if (!_languageClients.Any(lc => lc.ClientName == clientName)) {
-                    client = new PythonLanguageClient(site, workspaceService, optionsService, registryService, broker, project, replWindow);
-                    client.ClientName = clientName;
+                if (!_languageClients.Any(lc => lc.ContentTypeName == contentTypeName)) {
+                    client = new PythonLanguageClient(site, contentTypeName, workspaceService, optionsService, registryService, broker, project, replWindow);
                     _languageClients.Add(client);
                 }
             }
 
             if (client != null) {
-                await broker.LoadAsync(new PythonLanguageClientMetadata(clientName), client);
+                await broker.LoadAsync(new PythonLanguageClientMetadata(null, contentTypeName), client);
             }
         }
 
-        public static PythonLanguageClient FindLanguageClient(string clientName) {
-            if (clientName == null) {
-                throw new ArgumentNullException(nameof(clientName));
+        public static PythonLanguageClient FindLanguageClient(string contentTypeName) {
+            if (contentTypeName == null) {
+                throw new ArgumentNullException(nameof(contentTypeName));
             }
 
             lock (_languageClients) {
-                return _languageClients.SingleOrDefault(lc => lc.ClientName == clientName);
+                return _languageClients.SingleOrDefault(lc => lc.ContentTypeName == contentTypeName);
             }
         }
 
@@ -198,21 +207,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 throw new ArgumentNullException(nameof(textBuffer));
             }
 
-            if (textBuffer.Properties.TryGetProperty(LanguageClientConstants.ClientNamePropertyKey, out string name)) {
-                return FindLanguageClient(name);
-            }
-
-            return null;
+            return FindLanguageClient(textBuffer.ContentType.TypeName);
         }
 
-        public static void StopLanguageClient(string clientName) {
-            if (clientName == null) {
-                throw new ArgumentNullException(nameof(clientName));
+        public static void StopLanguageClient(string contentTypeName) {
+            if (contentTypeName == null) {
+                throw new ArgumentNullException(nameof(contentTypeName));
             }
 
             PythonLanguageClient client = null;
             lock (_languageClients) {
-                client = _languageClients.SingleOrDefault(lc => lc.ClientName == clientName);
+                client = _languageClients.SingleOrDefault(lc => lc.ContentTypeName == contentTypeName);
                 if (client != null) {
                     _languageClients.Remove(client);
                 }
@@ -223,7 +228,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
-        public string ClientName { get; set; }
+        public string ContentTypeName { get; }
 
         public IPythonInterpreterFactory Factory { get; private set; }
 
@@ -388,14 +393,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return;
             }
 
-            StopLanguageClient(ClientName);
+            StopLanguageClient(ContentTypeName);
             EnsureLanguageClientAsync(
                 _site,
                 _workspaceService,
                 _optionsService,
                 _registryService,
                 _broker,
-                ClientName,
+                ContentTypeName,
                 _project,
                 _replWindow
             ).HandleAllExceptions(_site, GetType()).DoNotWait();

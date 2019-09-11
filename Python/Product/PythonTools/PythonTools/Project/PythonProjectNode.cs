@@ -47,6 +47,7 @@ using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -104,6 +105,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
         private readonly TestFrameworkInfoBar _testFrameworkInfoBar;
+        private readonly IContentTypeRegistryService _contentTypeRegistryService;
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
 
@@ -116,6 +118,8 @@ namespace Microsoft.PythonTools.Project {
             // LSC
             _logger = serviceProvider.GetPythonToolsService().Logger;
             //_logger = _services.Python.Logger;
+
+            _contentTypeRegistryService = serviceProvider.GetComponentModel().GetService<IContentTypeRegistryService>();
 
             // LSC
             _vsProjectContext = serviceProvider.GetComponentModel().GetService<VsProjectContextProvider>();
@@ -715,7 +719,6 @@ namespace Microsoft.PythonTools.Project {
 
             _interpretersContainer = new InterpretersContainerNode(this);
             this.AddChild(_interpretersContainer);
-            RefreshInterpreters(alwaysCollapse: true);
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
 
@@ -726,6 +729,9 @@ namespace Microsoft.PythonTools.Project {
             } finally {
                 ActiveInterpreterChanged += OnActiveInterpreterChanged;
             }
+
+            // Needs to be refreshed after the active interpreter has been updated
+            RefreshInterpreters(alwaysCollapse: true);
 
             base.Reload();
 
@@ -754,15 +760,22 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private Task StartLanguageClient() {
+            var contentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(
+                _contentTypeRegistryService,
+                PythonFilePathToContentTypeProvider.GetContentTypeNameForProject(this)
+            );
+
             return PythonLanguageClient.EnsureLanguageClientAsync(
                 Site,
                 this,
-                Name
+                contentType.TypeName
             );
         }
 
         private Task RestartLanguageClient() {
-            PythonLanguageClient.StopLanguageClient(Name);
+            PythonLanguageClient.StopLanguageClient(
+                PythonFilePathToContentTypeProvider.GetContentTypeNameForProject(this)
+            );
             return StartLanguageClient();
         }
 
@@ -967,13 +980,12 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-
         private void SearchPaths_Changed(object sender, EventArgs e) {
             // Update solution explorer
-            Site.GetUIThread().InvokeAsync(() => {
+            Site.GetUIThread().InvokeTaskSync(async () => {
                 RefreshSearchPaths();
-                RestartLanguageClient();
-            });
+                await RestartLanguageClient();
+            }, CancellationToken.None);
 
             // Update analyzer
             // LSC
@@ -1120,7 +1132,10 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
-                PythonLanguageClient.StopLanguageClient(Name);
+                PythonLanguageClient.StopLanguageClient(
+                    PythonFilePathToContentTypeProvider.GetContentTypeNameForProject(this)
+                );
+
                 // LSC
                 //if (_analyzer != null) {
                 //    UnHookErrorsAndWarnings(_analyzer);

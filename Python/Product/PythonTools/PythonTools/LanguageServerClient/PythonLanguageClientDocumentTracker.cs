@@ -32,6 +32,8 @@ using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
+    // We're using PythonFilePathToContentTypeProvider now instead of this, keeping
+    // this around for now just in case there are issues and we need to go back.
     class PythonLanguageClientDocumentTracker : IVsRunningDocTableEvents, IDisposable {
         private IServiceProvider _site;
         private RunningDocumentTable _runDocTable;
@@ -64,10 +66,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _registryService = componentModel.GetService<IInterpreterRegistryService>();
             _broker = componentModel.GetService<ILanguageClientBroker>();
 
-            var nameToProjectMap = HandleLoadedDocuments();
-            foreach (var kv in nameToProjectMap) {
-                EnsureLanguageClient(kv.Key, kv.Value);
-            }
+            //var nameToProjectMap = HandleLoadedDocuments();
+            //foreach (var kv in nameToProjectMap) {
+            //    EnsureLanguageClient(kv.Key, kv.Value);
+            //}
         }
 
         public int OnAfterFirstDocumentLock(uint docCookie, uint dwRDTLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining) {
@@ -149,16 +151,16 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void EnsureLanguageClient(string name, PythonProjectNode project) {
-            _site.GetUIThread().InvokeTaskSync(() => PythonLanguageClient.EnsureLanguageClientAsync(
-                _site,
-                _workspaceService,
-                _optionsService,
-                _registryService,
-                _broker,
-                name,
-                project,
-                null
-            ), CancellationToken.None);
+            //_site.GetUIThread().InvokeTaskSync(() => PythonLanguageClient.EnsureLanguageClientAsync(
+            //    _site,
+            //    _workspaceService,
+            //    _optionsService,
+            //    _registryService,
+            //    _broker,
+            //    name,
+            //    project,
+            //    null
+            //), CancellationToken.None);
         }
     }
 }

@@ -77,6 +77,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             Path.Combine(GetLanguageServerFolder(FolderName), "Typeshed");
 
         private static string GetLanguageServerFolder(string folder) {
+            // To use your own build of the language server for developement purpose
+            // - git clone https://github.com/microsoft/python-language-server/
+            // - to debug initialization and get extra time to attach to the executable
+            //   uncomment WAIT_FOR_DEBUGGER in language server's Program.cs
+            // - in src folder, run: dotnet build
+            // - return the absolute path to "python-language-server\output\bin\Debug"
+            //return @"C:\Projects\GitHub\Microsoft\python-language-server\output\bin\Debug";
             return Path.Combine(
                 Path.GetDirectoryName(typeof(PythonLanguageClientStartInfo).Assembly.Location),
                 folder

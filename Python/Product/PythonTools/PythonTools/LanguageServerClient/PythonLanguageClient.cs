@@ -287,6 +287,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var interpreterPath = string.Empty;
             var interpreterVersion = string.Empty;
             var searchPaths = new List<string>();
+            string rootPath = null;
 
             if (_replWindow != null) {
                 var evaluator = _replWindow.Evaluator as PythonCommonInteractiveEvaluator;
@@ -305,16 +306,16 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     interpreterPath = Factory.Configuration.InterpreterPath;
                     interpreterVersion = Factory.Configuration.Version.ToString();
                     searchPaths.AddRange(_project._searchPaths.GetAbsoluteSearchPaths());
+                    rootPath = _project.ProjectHome;
                 }
             } else if (workspace != null) {
-                var workspaceFolder = workspace.Location;
-
                 Factory = workspace.GetInterpreterFactory(_registryService, _optionsService);
                 if (Factory != null) {
                     interpreterPath = Factory.Configuration.InterpreterPath;
                     interpreterVersion = Factory.Configuration.Version.ToString();
                     // VSCode captures the python.exe env variables, uses PYTHONPATH to build this list
                     searchPaths.AddRange(workspace.GetAbsoluteSearchPaths());
+                    rootPath = workspace.Location;
                 }
             } else {
                 Factory = _optionsService.DefaultInterpreter;
@@ -357,7 +358,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     "**/node_modules/*/**",
                     ".vscode/*.py",
                     "**/site-packages/**/*.py"
-                }
+                },
+                rootPathOverride = rootPath
             };
 
             await StartAsync.InvokeAsync(this, EventArgs.Empty);

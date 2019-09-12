@@ -60,6 +60,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         /// Path to a writable folder where analyzer can cache its data.
         /// </summary>
         public string cacheFolderPath;
+
+        /// <summary>
+        /// Root path override (used by PTVS).
+        /// </summary>
+        public string rootPathOverride;
     }
 
     public sealed class InformationDisplayOptions {

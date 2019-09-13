@@ -23,6 +23,7 @@ using Microsoft.Python.Parsing;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestAdapterTests.Mocks;
 using TestUtilities;
@@ -113,7 +114,7 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+            var discoverer = new PytestTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
             Assert.AreEqual(0, discoverySink.Tests.Count);
@@ -206,7 +207,7 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+            var discoverer = new PytestTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
 
@@ -296,7 +297,7 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+            var discoverer = new UnitTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
 
@@ -331,7 +332,7 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+            var discoverer = new UnitTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
            
@@ -418,7 +419,7 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+            var discoverer = new PytestTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
             Assert.AreEqual(0, discoverySink.Tests.Count);
@@ -521,7 +522,7 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+            var discoverer = new UnitTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
             Assert.AreEqual(0, discoverySink.Tests.Count);
@@ -689,7 +690,20 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+
+            ITestDiscoverer discoverer = null;
+            switch (testEnv.TestFramework) {
+                case FrameworkPytest:
+                    discoverer = new PytestTestDiscoverer();
+                    break;
+
+                case FrameworkUnittest:
+                    discoverer = new UnitTestDiscoverer();
+                    break;
+                default:
+                    Assert.Fail($"unknown testframework: {testEnv.TestFramework.ToString()}");
+                    break;
+            }
 
             discoverer.DiscoverTests(sources, discoveryContext, logger, discoverySink);
 

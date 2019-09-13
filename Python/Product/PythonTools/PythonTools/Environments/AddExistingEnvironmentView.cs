@@ -62,7 +62,8 @@ namespace Microsoft.PythonTools.Environments {
             "3.4",
             "3.5",
             "3.6",
-            "3.7"
+            "3.7",
+            "3.8",
         };
 
         public static readonly DependencyProperty InterpretersProperty =

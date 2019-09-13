@@ -211,7 +211,7 @@ if __name__ == '__main__':
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+            var discoverer = new PytestTestDiscoverer();
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
 
             Console.WriteLine($"Discovered Tests");
@@ -250,7 +250,7 @@ if __name__ == '__main__':
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+            var discoverer = new PytestTestDiscoverer();
             discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
 
             Console.WriteLine($"Discovered Tests");
@@ -399,7 +399,20 @@ if __name__ == '__main__':
         [TestCategory("10s")]
         public void RunUnittestCancel() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+            var executor = new TestExecutorUnitTest();
+            TestCancel(testEnv, executor);
+        }
 
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestCancel() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+            var executor = new TestExecutorPytest();
+            TestCancel(testEnv, executor);
+        }
+
+
+        private void TestCancel(TestEnvironment testEnv, ITestExecutor executor) {
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_cancel.py");
             File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_cancel.py"), testFilePath);
 
@@ -451,7 +464,6 @@ if __name__ == '__main__':
             var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutorUnitTest();
 
             var thread = new System.Threading.Thread(o => {
                 executor.RunTests(testCases, runContext, recorder);
@@ -481,6 +493,7 @@ if __name__ == '__main__':
             // Canceled test cases do not get recorded
             Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
         }
+
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]

@@ -75,7 +75,7 @@ using Microsoft.VisualStudio.Shell;
 
 internal static class LSConstants {
     // important: keep in sync with Build\PreBuild.ps1
-    public const string Version = "0.4.8.0";
+    public const string Version = "0.4.11.0";
     public const string Culture = "neutral";
     public const string PublicKeyToken = "b03f5f7f11d50a3a";
 }

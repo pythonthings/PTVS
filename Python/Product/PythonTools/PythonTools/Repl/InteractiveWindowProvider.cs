@@ -157,7 +157,8 @@ namespace Microsoft.PythonTools.Repl {
                 curId = GetNextId();
             }
 
-            var contentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(_contentTypeService, curId.ToString());
+            var contentTypeName = PythonFilePathToContentTypeProvider.GetContentTypeNameForREPL(curId);
+            var contentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(_contentTypeService, contentTypeName);
             var evaluator = new SelectableReplEvaluator(_serviceProvider, _evaluators, replId, curId.ToString());
             var window = CreateInteractiveWindowInternal(
                 evaluator,

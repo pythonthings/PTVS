@@ -34,7 +34,6 @@ using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.PythonTools.Logging;
 // LSC
 //using Microsoft.PythonTools.Navigation;
@@ -43,7 +42,6 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
-using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -105,9 +103,10 @@ namespace Microsoft.PythonTools.Project {
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
         private readonly TestFrameworkInfoBar _testFrameworkInfoBar;
-        private readonly IContentTypeRegistryService _contentTypeRegistryService;
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
+
+        public event EventHandler LanguageServerRestart;
 
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
             //_services = serviceProvider.GetEditorServices();
@@ -118,8 +117,6 @@ namespace Microsoft.PythonTools.Project {
             // LSC
             _logger = serviceProvider.GetPythonToolsService().Logger;
             //_logger = _services.Python.Logger;
-
-            _contentTypeRegistryService = serviceProvider.GetComponentModel().GetService<IContentTypeRegistryService>();
 
             // LSC
             _vsProjectContext = serviceProvider.GetComponentModel().GetService<VsProjectContextProvider>();
@@ -749,34 +746,6 @@ namespace Microsoft.PythonTools.Project {
             if (!this.IsAppxPackageableProject()) {
                 _searchPaths.LoadPathsFromString(ProjectHome, GetProjectProperty(PythonConstants.SearchPathSetting, false));
             }
-
-            Site.GetUIThread().InvokeTaskSync(async () => StartLanguageClient(), CancellationToken.None);
-
-            // LSC
-            //ReanalyzeProject(ActiveInterpreter)
-            //    .HandleAllExceptions(Site, GetType(), allowUI: false)
-            //    .DoNotWait();
-
-        }
-
-        private Task StartLanguageClient() {
-            var contentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(
-                _contentTypeRegistryService,
-                PythonFilePathToContentTypeProvider.GetContentTypeNameForProject(this)
-            );
-
-            return PythonLanguageClient.EnsureLanguageClientAsync(
-                Site,
-                this,
-                contentType.TypeName
-            );
-        }
-
-        private Task RestartLanguageClient() {
-            PythonLanguageClient.StopLanguageClient(
-                PythonFilePathToContentTypeProvider.GetContentTypeNameForProject(this)
-            );
-            return StartLanguageClient();
         }
 
         public override void OnOpenItem(string fullPathToSourceFile) {
@@ -982,24 +951,10 @@ namespace Microsoft.PythonTools.Project {
 
         private void SearchPaths_Changed(object sender, EventArgs e) {
             // Update solution explorer
-            Site.GetUIThread().InvokeTaskSync(async () => {
-                RefreshSearchPaths();
-                await RestartLanguageClient();
-            }, CancellationToken.None);
+            RefreshSearchPaths();
 
-            // Update analyzer
-            // LSC
-            //UpdateAnalyzerSearchPaths();
+            LanguageServerRestart?.Invoke(this, EventArgs.Empty);
         }
-
-        //private void UpdateAnalyzerSearchPaths(VsProjectAnalyzer analyzer = null) {
-        //    analyzer = analyzer ?? _analyzer;
-        //    if (analyzer != null) {
-        //        analyzer.SetSearchPathsAsync(_searchPaths.GetAbsoluteSearchPaths())
-        //            .HandleAllExceptions(Site, GetType())
-        //            .DoNotWait();
-        //    }
-        //}
 
         /// <summary>
         /// Returns a list of absolute search paths, optionally including those
@@ -1018,12 +973,9 @@ namespace Microsoft.PythonTools.Project {
             } else if (!_searchPaths.AddOrReplace(moniker, absolutePath, false)) {
                 // Didn't change a search path, so we need to trigger reanalysis
                 // manually.
-                Site.GetUIThread().InvokeTaskSync(async () => RestartLanguageClient(), CancellationToken.None);
-                // LSC
-                //UpdateAnalyzerSearchPaths();
+                LanguageServerRestart?.Invoke(this, EventArgs.Empty);
             }
         }
-
 
         /// <summary>
         /// Executes Add Search Path menu command.
@@ -1132,9 +1084,9 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
-                PythonLanguageClient.StopLanguageClient(
-                    PythonFilePathToContentTypeProvider.GetContentTypeNameForProject(this)
-                );
+                //PythonLanguageClient.StopLanguageClient(
+                //    PythonFilePathToContentTypeProvider.GetContentTypeNameForProject(this)
+                //);
 
                 // LSC
                 //if (_analyzer != null) {
@@ -1435,7 +1387,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            Site.GetUIThread().InvokeTaskSync(async () => RestartLanguageClient(), CancellationToken.None);
+            LanguageServerRestart?.Invoke(this, EventArgs.Empty);
 
             // LSC
             //Site.GetUIThread().InvokeTask(async () => {

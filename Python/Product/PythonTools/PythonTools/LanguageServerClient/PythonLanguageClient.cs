@@ -36,6 +36,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
+using Microsoft.VisualStudioTools;
 using StreamJsonRpc;
 using Task = System.Threading.Tasks.Task;
 
@@ -56,6 +57,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly ILanguageClientBroker _broker;
         private readonly PythonProjectNode _project;
         private readonly IInteractiveWindow _replWindow;
+        private readonly IContentTypeRegistryService _contentTypeRegistryService;
         private JsonRpc _rpc;
         private DisposableBag _disposables;
 
@@ -90,15 +92,23 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _project = project;
             _replWindow = replWindow;
             _disposables = new DisposableBag(GetType().Name);
+            _contentTypeRegistryService = site.GetComponentModel().GetService<IContentTypeRegistryService>();
+
+            if (project != null) {
+                project.LanguageServerRestart += OnProjectChanged;
+                project.AddActionOnClose(this, OnProjectClosed);
+            }
 
             _optionsService.DefaultInterpreterChanged += OnDefaultInterpreterChanged;
             _workspaceService.OnActiveWorkspaceChanged += OnActiveWorkspaceChanged;
             _disposables.Add(() => {
                 _optionsService.DefaultInterpreterChanged -= OnDefaultInterpreterChanged;
                 _workspaceService.OnActiveWorkspaceChanged -= OnActiveWorkspaceChanged;
+                if (project != null) {
+                    project.LanguageServerRestart -= OnProjectChanged;
+                }
             });
 
-            // TODO: if this is a language client for a REPL window, we need to pass in the REPL evaluator to middle layer
             //MiddleLayer = new PythonLanguageClientMiddleLayer(null);
             CustomMessageTarget = new PythonLanguageClientCustomTarget(site);
         }
@@ -390,8 +400,33 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _disposables.TryDispose();
         }
 
+        private void OnProjectChanged(object sender, EventArgs e) {
+            var project = _project;
+            _site.GetUIThread().InvokeTaskSync(async () => {
+                PythonLanguageClient.StopLanguageClient(ContentTypeName);
+                await PythonLanguageClient.EnsureLanguageClientAsync(
+                    _site,
+                    project,
+                    ContentTypeName
+                );
+            }, CancellationToken.None);
+        }
+
+        private void OnProjectClosed(object key) {
+            PythonLanguageClient.StopLanguageClient(
+                PythonFilePathToContentTypeProvider.GetContentTypeNameForProject(_project)
+            );
+        }
+
         private void OnDefaultInterpreterChanged(object sender, EventArgs e) {
             if (_optionsService.DefaultInterpreter == Factory) {
+                return;
+            }
+
+            if (_project != null) {
+                // This event happens while loading the project and needs to be ignored.
+                // Project will send a restart event if its effective factory changes
+                // when the global default is changed so no need to do anything here.
                 return;
             }
 

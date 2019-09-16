@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             if (contentType == null) {
                 contentType = contentTypeRegistryService.AddContentType(
                     contentTypeName,
-                    new[] { PythonCoreConstants.ContentType, CodeRemoteContentDefinition.CodeRemoteContentTypeName }
+                    new[] { PythonCoreConstants.ContentType }
                 );
             }
 

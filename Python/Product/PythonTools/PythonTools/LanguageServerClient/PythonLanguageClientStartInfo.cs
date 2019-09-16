@@ -83,6 +83,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             //   uncomment WAIT_FOR_DEBUGGER in language server's Program.cs
             // - in src folder, run: dotnet build
             // - return the absolute path to "python-language-server\output\bin\Debug"
+            //return @"C:\Projects\GitHub\huguesv\python-language-server\output\bin\Debug";
             //return @"C:\Projects\GitHub\Microsoft\python-language-server\output\bin\Debug";
             return Path.Combine(
                 Path.GetDirectoryName(typeof(PythonLanguageClientStartInfo).Assembly.Location),

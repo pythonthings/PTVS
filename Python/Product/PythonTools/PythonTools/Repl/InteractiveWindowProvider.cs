@@ -298,7 +298,20 @@ namespace Microsoft.PythonTools.Repl {
                 toolWindow.BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
             }
 
-            replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
+            // Initializes the command filters with the base Python content type
+            // so that our MEF exports, such as ReplWindowCreationListener, are activated.
+            var pythonContentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(_contentTypeService, PythonCoreConstants.ContentType);
+            replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, pythonContentType);
+
+            // SetLanguage above has set the content type on interactive window properties to base python content type
+            // We need to change it again to the derived content type to match the content type passed to LSC.
+            // Note: This prevents textmate colorization from working, comment this out to see that work.
+            // Note: LSC doesn't actually work on the window, not sure why, 
+            //       it probably doesn't catch the input buffer creation.
+            replWindow.InteractiveWindow.Properties[typeof(IContentType)] = contentType;
+            if (replWindow.InteractiveWindow.CurrentLanguageBuffer != null) {
+                replWindow.InteractiveWindow.CurrentLanguageBuffer.ChangeContentType(contentType, null);
+            }
 
             var selectEval = evaluator as SelectableReplEvaluator;
             if (selectEval != null) {

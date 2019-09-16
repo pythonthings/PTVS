@@ -17,7 +17,6 @@
 using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -32,36 +31,43 @@ namespace Microsoft.PythonTools.Editor {
     [Export(typeof(IVsInteractiveWindowOleCommandTargetProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
     class ReplWindowCreationListener : IVsInteractiveWindowOleCommandTargetProvider {
-        private readonly PythonEditorServices _editorServices;
+        //private readonly PythonEditorServices _editorServices;
 
-        [ImportingConstructor]
-        public ReplWindowCreationListener([Import] PythonEditorServices editorServices) {
-            _editorServices = editorServices;
-        }
+        [Import(typeof(SVsServiceProvider))]
+        public IServiceProvider Site;
+
+        //[ImportingConstructor]
+        //public ReplWindowCreationListener([Import] PythonEditorServices editorServices) {
+        //    _editorServices = editorServices;
+        //}
+
+        //public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
+        //    if (textView.TextBuffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName)) {
+        //        // We want default handling when this is a remote buffer
+        //        return null;
+        //    }
+
+        //    var window = textView.TextBuffer.GetInteractiveWindow();
+
+        //    var controller = IntellisenseControllerProvider.GetOrCreateController(
+        //        _editorServices.Site,
+        //        _editorServices.ComponentModel,
+        //        textView
+        //    );
+        //    controller._oldTarget = nextTarget;
+
+        //    var editFilter = EditFilter.GetOrCreate(_editorServices, textView, controller);
+
+        //    if (window == null) {
+        //        return editFilter;
+        //    }
+
+        //    textView.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
+        //    return ReplEditFilter.GetOrCreate(_editorServices.Site, _editorServices.ComponentModel, textView, editFilter);
+        //}
 
         public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
-            if (textView.TextBuffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName)) {
-                // We want default handling when this is a remote buffer
-                return null;
-            }
-
-            var window = textView.TextBuffer.GetInteractiveWindow();
-
-            var controller = IntellisenseControllerProvider.GetOrCreateController(
-                _editorServices.Site,
-                _editorServices.ComponentModel,
-                textView
-            );
-            controller._oldTarget = nextTarget;
-
-            var editFilter = EditFilter.GetOrCreate(_editorServices, textView, controller);
-
-            if (window == null) {
-                return editFilter;
-            }
-
-            textView.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
-            return ReplEditFilter.GetOrCreate(_editorServices.Site, _editorServices.ComponentModel, textView, editFilter);
+            return ReplEditFilter.GetOrCreate(Site, Site.GetComponentModel(), textView, nextTarget);
         }
     }
 }

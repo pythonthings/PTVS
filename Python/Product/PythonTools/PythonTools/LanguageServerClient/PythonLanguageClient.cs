@@ -47,8 +47,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     /// <remarks>
     /// See documentation at https://docs.microsoft.com/en-us/visualstudio/extensibility/adding-an-lsp-extension?view=vs-2019
     /// </remarks>
-    //[ContentType(PythonCoreConstants.ContentType)]
-    //[Export(typeof(ILanguageClient))]
     class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2, IDisposable {
         private readonly IServiceProvider _site;
         private readonly IVsFolderWorkspaceService _workspaceService;
@@ -62,16 +60,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private DisposableBag _disposables;
 
         private static readonly List<PythonLanguageClient> _languageClients = new List<PythonLanguageClient>();
-
-        //[ImportingConstructor]
-        //public PythonLanguageClient(
-        //    [Import(typeof(SVsServiceProvider))] IServiceProvider site,
-        //    [Import] IVsFolderWorkspaceService workspaceService,
-        //    [Import] IInterpreterOptionsService optionsService,
-        //    [Import] IInterpreterRegistryService registryService,
-        //    [Import] ILanguageClientBroker broker
-        //) : this(site, PythonCoreConstants.ContentType, workspaceService, optionsService, registryService, broker, null, null) {
-        //}
 
         public PythonLanguageClient(
             IServiceProvider site,
@@ -94,18 +82,30 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _disposables = new DisposableBag(GetType().Name);
             _contentTypeRegistryService = site.GetComponentModel().GetService<IContentTypeRegistryService>();
 
+            var pythonWorkspaceProvider = site.GetComponentModel().GetService<IPythonWorkspaceContextProvider>();
+            var pythonWorkspace = pythonWorkspaceProvider?.Workspace;
+            if (pythonWorkspace != null) {
+                pythonWorkspace.ActiveInterpreterChanged += OnWorkspaceChanged;
+                pythonWorkspace.SearchPathsSettingChanged += OnWorkspaceChanged;
+                pythonWorkspace.AddActionOnClose(this, OnWorkspaceClosed);
+            }
+
             if (project != null) {
                 project.LanguageServerRestart += OnProjectChanged;
                 project.AddActionOnClose(this, OnProjectClosed);
             }
 
             _optionsService.DefaultInterpreterChanged += OnDefaultInterpreterChanged;
-            _workspaceService.OnActiveWorkspaceChanged += OnActiveWorkspaceChanged;
             _disposables.Add(() => {
                 _optionsService.DefaultInterpreterChanged -= OnDefaultInterpreterChanged;
-                _workspaceService.OnActiveWorkspaceChanged -= OnActiveWorkspaceChanged;
+
                 if (project != null) {
                     project.LanguageServerRestart -= OnProjectChanged;
+                }
+
+                if (pythonWorkspace != null) {
+                    pythonWorkspace.ActiveInterpreterChanged -= OnWorkspaceChanged;
+                    pythonWorkspace.SearchPathsSettingChanged -= OnWorkspaceChanged;
                 }
             });
 
@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             );
         }
 
-        public static async Task EnsureLanguageClientAsync(
+        private static async Task EnsureLanguageClientAsync(
             IServiceProvider serviceProvider,
             PythonProjectNode project,
             string contentTypeName
@@ -171,6 +171,36 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 broker,
                 contentTypeName,
                 project,
+                null
+            );
+        }
+
+        private static async Task EnsureLanguageClientAsync(
+            IServiceProvider serviceProvider,
+            string contentTypeName
+        ) {
+            if (serviceProvider == null) {
+                throw new ArgumentNullException(nameof(serviceProvider));
+            }
+
+            if (contentTypeName == null) {
+                throw new ArgumentNullException(nameof(contentTypeName));
+            }
+
+            var componentModel = serviceProvider.GetComponentModel();
+            var workspaceService = componentModel.GetService<IVsFolderWorkspaceService>();
+            var optionsService = componentModel.GetService<IInterpreterOptionsService>();
+            var registryService = componentModel.GetService<IInterpreterRegistryService>();
+            var broker = componentModel.GetService<ILanguageClientBroker>();
+
+            await EnsureLanguageClientAsync(
+                serviceProvider,
+                workspaceService,
+                optionsService,
+                registryService,
+                broker,
+                contentTypeName,
+                null,
                 null
             );
         }
@@ -220,7 +250,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return FindLanguageClient(textBuffer.ContentType.TypeName);
         }
 
-        public static void StopLanguageClient(string contentTypeName) {
+        public static void DisposeLanguageClient(string contentTypeName) {
             if (contentTypeName == null) {
                 throw new ArgumentNullException(nameof(contentTypeName));
             }
@@ -230,11 +260,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 client = _languageClients.SingleOrDefault(lc => lc.ContentTypeName == contentTypeName);
                 if (client != null) {
                     _languageClients.Remove(client);
+                    client.Stop();
+                    client.Dispose();
                 }
-            }
-
-            if (client != null) {
-                client.StopAsync?.Invoke(client, EventArgs.Empty);
             }
         }
 
@@ -400,22 +428,42 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _disposables.TryDispose();
         }
 
-        private void OnProjectChanged(object sender, EventArgs e) {
-            var project = _project;
+        private void Stop() {
             _site.GetUIThread().InvokeTaskSync(async () => {
-                PythonLanguageClient.StopLanguageClient(ContentTypeName);
-                await PythonLanguageClient.EnsureLanguageClientAsync(
-                    _site,
-                    project,
-                    ContentTypeName
-                );
+                await StopAsync?.Invoke(this, EventArgs.Empty);
             }, CancellationToken.None);
         }
 
+        private void Restart() {
+            _site.GetUIThread().InvokeTaskSync(RestartAsync, CancellationToken.None);
+        }
+
+        private async Task RestartAsync() {
+            var site = _site;
+            var project = _project;
+            var contentTypeName = ContentTypeName;
+
+            DisposeLanguageClient(ContentTypeName);
+            await EnsureLanguageClientAsync(site, project, contentTypeName);
+
+            //await StopAsync?.Invoke(this, EventArgs.Empty);
+            //await _broker.LoadAsync(new PythonLanguageClientMetadata(null, ContentTypeName), this);
+        }
+
+        private void OnProjectChanged(object sender, EventArgs e) {
+            Restart();
+        }
+
         private void OnProjectClosed(object key) {
-            PythonLanguageClient.StopLanguageClient(
-                PythonFilePathToContentTypeProvider.GetContentTypeNameForProject(_project)
-            );
+            PythonLanguageClient.DisposeLanguageClient(ContentTypeName);
+        }
+
+        private void OnWorkspaceChanged(object sender, EventArgs e) {
+            Restart();
+        }
+
+        private void OnWorkspaceClosed(object key) {
+            PythonLanguageClient.DisposeLanguageClient(ContentTypeName);
         }
 
         private void OnDefaultInterpreterChanged(object sender, EventArgs e) {
@@ -423,14 +471,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return;
             }
 
-            if (_project != null) {
-                // This event happens while loading the project and needs to be ignored.
-                // Project will send a restart event if its effective factory changes
-                // when the global default is changed so no need to do anything here.
+            if (_project != null || _workspaceService.CurrentWorkspace != null) {
+                // This event happens while loading the project or workspace.
+                // We rely on custom events from those to handle restarts.
                 return;
             }
 
-            StopLanguageClient(ContentTypeName);
+            DisposeLanguageClient(ContentTypeName);
             EnsureLanguageClientAsync(
                 _site,
                 _workspaceService,
@@ -441,12 +488,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 _project,
                 _replWindow
             ).HandleAllExceptions(_site, GetType()).DoNotWait();
-        }
-
-        private Task OnActiveWorkspaceChanged(object sender, EventArgs e) {
-            // TODO: determine if we need to stop this language server client
-            // we also need to restart language server when things like search path, active interpreter are changing
-            return Task.CompletedTask;
         }
     }
 }

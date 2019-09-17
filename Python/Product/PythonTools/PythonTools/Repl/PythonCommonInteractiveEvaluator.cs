@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Repl {
                 // LSC
                 //_analyzer?.Dispose();
                 if (ContentType != null) {
-                    PythonLanguageClient.StopLanguageClient(ContentType.TypeName);
+                    PythonLanguageClient.DisposeLanguageClient(ContentType.TypeName);
                 }
             }
         }

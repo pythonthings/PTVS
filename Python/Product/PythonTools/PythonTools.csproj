@@ -280,13 +280,14 @@
     <Compile Include="PythonTools\Commands\CurrentEnvironmentListCommand.cs" />
     <Compile Include="PythonTools\Commands\CurrentEnvironmentCommand.cs" />
     <Compile Include="PythonTools\Commands\SwitchToEnvironmentCommand.cs" />
+    <Compile Include="PythonTools\Editor\Comment\CommentHelper.cs" />
     <Compile Include="PythonTools\Editor\EditorExtensions.cs" />
     <Compile Include="PythonTools\Editor\LanguagePreferences.cs" />
-    <Compile Include="PythonTools\Editor\PythonCommentSelectionCommandHandler.cs" />
-    <Compile Include="PythonTools\Editor\PythonPasteCommandHandler.cs" />
+    <Compile Include="PythonTools\Editor\Comment\PythonCommentSelectionCommandHandler.cs" />
+    <Compile Include="PythonTools\Editor\Paste\PythonPasteCommandHandler.cs" />
     <Compile Include="PythonTools\Editor\ReplWindowCreationListener.cs" />
-    <Compile Include="PythonTools\Editor\PythonReturnKeyCommandHandler.cs" />
-    <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
+    <Compile Include="PythonTools\Editor\Typing\PythonReturnKeyCommandHandler.cs" />
+    <Compile Include="PythonTools\Editor\SmartIndent\SmartIndentProvider.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentSwitcherFileContext.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentSwitcherProjectContext.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentSwitcherWorkspaceContext.cs" />
@@ -366,7 +367,7 @@
     <Compile Include="PythonTools\Debugger\NoStartupFileException.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
     <Compile Include="PythonTools\Debugger\ProvideDebugAdapterAttributes.cs" />
-    <Compile Include="PythonTools\Editor\ReplPromptHelpers.cs" />
+    <Compile Include="PythonTools\Editor\Paste\ReplPromptHelpers.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Logging\ActivityLogLogger.cs" />
     <Compile Include="PythonTools\Options\CodeFormattingCategory.cs" />
@@ -1083,7 +1084,9 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="PythonTools\Editor\BraceMatching\" />
+  </ItemGroup>
   <PropertyGroup>
     <SharedProject_IncludeUIThreadBase>false</SharedProject_IncludeUIThreadBase>
   </PropertyGroup>

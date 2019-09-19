@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.ComponentModel.Composition;
-using Microsoft.PythonTools.Editor.Core;
 using Microsoft.VisualStudio.Commanding;
 using Microsoft.VisualStudio.Text.Editor.Commanding.Commands;
 using Microsoft.VisualStudio.Utilities;
@@ -32,11 +31,11 @@ namespace Microsoft.PythonTools.Editor {
         public CommandState GetCommandState(UncommentSelectionCommandArgs args) => CommandState.Available;
 
         public bool ExecuteCommand(CommentSelectionCommandArgs args, CommandExecutionContext executionContext) {
-            return args.TextView.CommentOrUncommentBlock(comment: true);
+            return CommentHelper.CommentOrUncommentBlock(args.TextView, comment: true);
         }
 
         public bool ExecuteCommand(UncommentSelectionCommandArgs args, CommandExecutionContext executionContext) {
-            return args.TextView.CommentOrUncommentBlock(comment: false);
+            return CommentHelper.CommentOrUncommentBlock(args.TextView, comment: false);
         }
     }
 }

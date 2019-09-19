@@ -64,44 +64,42 @@ namespace Microsoft.PythonTools {
         internal static bool IsAppxPackageableProject(this ProjectNode projectNode) {
             var appxProp = projectNode.BuildProject.GetPropertyValue(ProjectFileConstants.AppxPackage);
             var containerProp = projectNode.BuildProject.GetPropertyValue(ProjectFileConstants.WindowsAppContainer);
-            var appxFlag = false;
-            var containerFlag = false;
 
-            if (bool.TryParse(appxProp, out appxFlag) && bool.TryParse(containerProp, out containerFlag)) {
+            if (bool.TryParse(appxProp, out bool appxFlag) && bool.TryParse(containerProp, out bool containerFlag)) {
                 return appxFlag && containerFlag;
             } else {
                 return false;
             }
         }
 
-        public static StandardGlyphGroup ToGlyphGroup(this PythonMemberType objectType) {
-            StandardGlyphGroup group;
-            switch (objectType) {
-                case PythonMemberType.Class: group = StandardGlyphGroup.GlyphGroupClass; break;
-                    // LSC
-                //case PythonMemberType.DelegateInstance:
-                //case PythonMemberType.Delegate: group = StandardGlyphGroup.GlyphGroupDelegate; break;
-                //case PythonMemberType.Enum: group = StandardGlyphGroup.GlyphGroupEnum; break;
-                //case PythonMemberType.Namespace: group = StandardGlyphGroup.GlyphGroupNamespace; break;
-                //case PythonMemberType.Multiple: group = StandardGlyphGroup.GlyphGroupOverload; break;
-                //case PythonMemberType.Field: group = StandardGlyphGroup.GlyphGroupField; break;
-                case PythonMemberType.Module: group = StandardGlyphGroup.GlyphGroupModule; break;
-                case PythonMemberType.Property: group = StandardGlyphGroup.GlyphGroupProperty; break;
-                case PythonMemberType.Instance: group = StandardGlyphGroup.GlyphGroupVariable; break;
-                //case PythonMemberType.Constant: group = StandardGlyphGroup.GlyphGroupVariable; break;
-                //case PythonMemberType.EnumInstance: group = StandardGlyphGroup.GlyphGroupEnumMember; break;
-                //case PythonMemberType.Event: group = StandardGlyphGroup.GlyphGroupEvent; break;
-                //case PythonMemberType.Keyword: group = StandardGlyphGroup.GlyphKeyword; break;
-                //case PythonMemberType.CodeSnippet: group = StandardGlyphGroup.GlyphCSharpExpansion; break;
-                //case PythonMemberType.NamedArgument: group = StandardGlyphGroup.GlyphGroupMapItem; break;
-                case PythonMemberType.Function:
-                case PythonMemberType.Method:
-                default:
-                    group = StandardGlyphGroup.GlyphGroupMethod;
-                    break;
-            }
-            return group;
-        }
+        //public static StandardGlyphGroup ToGlyphGroup(this PythonMemberType objectType) {
+        //    StandardGlyphGroup group;
+        //    switch (objectType) {
+        //        case PythonMemberType.Class: group = StandardGlyphGroup.GlyphGroupClass; break;
+        //            // LSC
+        //        //case PythonMemberType.DelegateInstance:
+        //        //case PythonMemberType.Delegate: group = StandardGlyphGroup.GlyphGroupDelegate; break;
+        //        //case PythonMemberType.Enum: group = StandardGlyphGroup.GlyphGroupEnum; break;
+        //        //case PythonMemberType.Namespace: group = StandardGlyphGroup.GlyphGroupNamespace; break;
+        //        //case PythonMemberType.Multiple: group = StandardGlyphGroup.GlyphGroupOverload; break;
+        //        //case PythonMemberType.Field: group = StandardGlyphGroup.GlyphGroupField; break;
+        //        case PythonMemberType.Module: group = StandardGlyphGroup.GlyphGroupModule; break;
+        //        case PythonMemberType.Property: group = StandardGlyphGroup.GlyphGroupProperty; break;
+        //        case PythonMemberType.Instance: group = StandardGlyphGroup.GlyphGroupVariable; break;
+        //        //case PythonMemberType.Constant: group = StandardGlyphGroup.GlyphGroupVariable; break;
+        //        //case PythonMemberType.EnumInstance: group = StandardGlyphGroup.GlyphGroupEnumMember; break;
+        //        //case PythonMemberType.Event: group = StandardGlyphGroup.GlyphGroupEvent; break;
+        //        //case PythonMemberType.Keyword: group = StandardGlyphGroup.GlyphKeyword; break;
+        //        //case PythonMemberType.CodeSnippet: group = StandardGlyphGroup.GlyphCSharpExpansion; break;
+        //        //case PythonMemberType.NamedArgument: group = StandardGlyphGroup.GlyphGroupMapItem; break;
+        //        case PythonMemberType.Function:
+        //        case PythonMemberType.Method:
+        //        default:
+        //            group = StandardGlyphGroup.GlyphGroupMethod;
+        //            break;
+        //    }
+        //    return group;
+        //}
 
         internal static bool CanComplete(this ClassificationSpan token) {
             return token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Keyword) |
@@ -347,33 +345,33 @@ namespace Microsoft.PythonTools {
         /// 
         /// Returns null if the caret isn't in a Python buffer.
         /// </summary>
-        //internal static ITextBuffer GetPythonBufferAtCaret(this ITextView textView) {
-        //    return GetPythonCaret(textView)?.Snapshot.TextBuffer;
-        //}
+        internal static ITextBuffer GetPythonBufferAtCaret(this ITextView textView) {
+            return GetPythonCaret(textView)?.Snapshot.TextBuffer;
+        }
 
         /// <summary>
         /// Gets the point where the caret is currently located in a Python buffer, or null if the caret
         /// isn't currently positioned in a Python buffer.
         /// </summary>
-        //internal static SnapshotPoint? GetPythonCaret(this ITextView textView) {
-        //    return textView.BufferGraph.MapDownToFirstMatch(
-        //        textView.Caret.Position.BufferPosition,
-        //        PointTrackingMode.Positive,
-        //        EditorExtensions.IsPythonContent,
-        //        PositionAffinity.Successor
-        //    );
-        //}
+        internal static SnapshotPoint? GetPythonCaret(this ITextView textView) {
+            return textView.BufferGraph.MapDownToFirstMatch(
+                textView.Caret.Position.BufferPosition,
+                PointTrackingMode.Positive,
+                EditorExtensions.IsPythonContent,
+                PositionAffinity.Successor
+            );
+        }
 
         /// <summary>
         /// Gets the current selection in a text view mapped down to the Python buffer(s).
         /// </summary>
-        //internal static NormalizedSnapshotSpanCollection GetPythonSelection(this ITextView textView) {
-        //    return textView.BufferGraph.MapDownToFirstMatch(
-        //        textView.Selection.StreamSelectionSpan.SnapshotSpan,
-        //        SpanTrackingMode.EdgeInclusive,
-        //        EditorExtensions.IsPythonContent
-        //    );
-        //}
+        internal static NormalizedSnapshotSpanCollection GetPythonSelection(this ITextView textView) {
+            return textView.BufferGraph.MapDownToFirstMatch(
+                textView.Selection.StreamSelectionSpan.SnapshotSpan,
+                SpanTrackingMode.EdgeInclusive,
+                EditorExtensions.IsPythonContent
+            );
+        }
 
         /// <summary>
         /// Gets the Python project node associatd with the buffer where the caret is located.

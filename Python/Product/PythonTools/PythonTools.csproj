@@ -401,6 +401,7 @@
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientCustomTarget.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientMiddleLayer.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientStartInfo.cs" />
+    <Compile Include="PythonTools\PythonMemberTypeExtensions.cs" />
     <Compile Include="PythonTools\WorkspaceInfoBarManager.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialog.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialogHeaderControl.xaml.cs">

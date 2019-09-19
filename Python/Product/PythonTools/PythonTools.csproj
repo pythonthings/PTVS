@@ -282,6 +282,7 @@
     <Compile Include="PythonTools\Commands\SwitchToEnvironmentCommand.cs" />
     <Compile Include="PythonTools\Editor\EditorExtensions.cs" />
     <Compile Include="PythonTools\Editor\LanguagePreferences.cs" />
+    <Compile Include="PythonTools\Editor\PythonPasteCommandHandler.cs" />
     <Compile Include="PythonTools\Editor\ReplWindowCreationListener.cs" />
     <Compile Include="PythonTools\Editor\PythonReturnKeyCommandHandler.cs" />
     <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
